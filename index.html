@@ -1,0 +1,1635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sticker Studio — iPhone 17 Pro Max</title>
+</head>
+<body>
+<style>
+  /* ============================================================
+     STICKER STUDIO — iPhone 17 Pro Max sticker placement tool
+     Dark "precision workshop" studio. Theme-aware + EN/AR (RTL).
+     ============================================================ */
+
+  :root{
+    /* graphite neutrals with a cool bias */
+    --bg:#0d0e12;
+    --stage:#101218;
+    --panel:#15171e;
+    --panel-2:#1b1e27;
+    --panel-3:#232734;
+    --line:rgba(255,255,255,.08);
+    --line-strong:rgba(255,255,255,.14);
+    --text:#eef0f5;
+    --muted:#98a0b3;
+    --muted-2:#8a92a6;
+    --accent:#4a86ff;          /* electric precision blue */
+    --accent-ink:#ffffff;
+    --accent-soft:rgba(74,134,255,.14);
+    --cut:#ff8a4c;             /* die-cut / production amber */
+    --cut-soft:rgba(255,138,76,.16);
+    --good:#34d399;
+    --warn:#fbbf24;
+    --danger:#f87171;
+    --shadow:0 18px 50px -12px rgba(0,0,0,.6);
+    --radius:14px;
+    --radius-sm:10px;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+    --font-ar:"SF Arabic","Geeza Pro","Noto Sans Arabic",var(--font);
+    --mono:"SF Mono",ui-monospace,"JetBrains Mono","Cascadia Code",Menlo,Consolas,monospace;
+  }
+  :root[data-theme="light"]{
+    --bg:#eef1f6;
+    --stage:#e6e9f0;
+    --panel:#ffffff;
+    --panel-2:#f4f6fb;
+    --panel-3:#e9edf5;
+    --line:rgba(15,20,35,.09);
+    --line-strong:rgba(15,20,35,.16);
+    --text:#131722;
+    --muted:#5a6273;
+    --muted-2:#667085;
+    --accent:#2f6bf0;
+    --accent-soft:rgba(47,107,240,.12);
+    --cut:#e0692a;
+    --cut-soft:rgba(224,105,42,.14);
+    --shadow:0 18px 44px -16px rgba(20,30,60,.28);
+  }
+  @media (prefers-color-scheme:light){
+    :root:not([data-theme="dark"]){
+      --bg:#eef1f6;--stage:#e6e9f0;--panel:#ffffff;--panel-2:#f4f6fb;--panel-3:#e9edf5;
+      --line:rgba(15,20,35,.09);--line-strong:rgba(15,20,35,.16);
+      --text:#131722;--muted:#5a6273;--muted-2:#667085;
+      --accent:#2f6bf0;--accent-soft:rgba(47,107,240,.12);
+      --cut:#e0692a;--cut-soft:rgba(224,105,42,.14);
+      --shadow:0 18px 44px -16px rgba(20,30,60,.28);
+    }
+  }
+
+  *{box-sizing:border-box}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+  button:focus:not(:focus-visible){outline:none}
+  html,body{height:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--text);font-family:var(--font);
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+    overflow:hidden;
+  }
+  [dir="rtl"] body,[dir="rtl"]{font-family:var(--font-ar)}
+  button{font-family:inherit}
+  ::selection{background:var(--accent-soft)}
+
+  /* ---------- App shell ---------- */
+  .app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+  .topbar{
+    display:flex;align-items:center;gap:14px;height:56px;flex:0 0 auto;
+    padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);
+    z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand .glyph{
+    width:30px;height:30px;border-radius:8px;flex:0 0 auto;
+    background:linear-gradient(150deg,var(--accent),#7aa8ff);
+    display:grid;place-items:center;box-shadow:0 4px 14px -4px var(--accent);
+  }
+  .brand .glyph svg{width:17px;height:17px}
+  .brand .name{font-weight:650;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+  .brand .sub{font-size:11px;color:var(--muted-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+
+  .zone-tabs{display:flex;gap:4px;background:var(--panel-2);padding:4px;border-radius:11px;border:1px solid var(--line)}
+  .zone-tabs button{
+    border:0;background:transparent;color:var(--muted);cursor:pointer;
+    padding:7px 15px;border-radius:8px;font-size:13px;font-weight:550;display:flex;align-items:center;gap:7px;
+    transition:.15s;
+  }
+  .zone-tabs button svg{width:15px;height:15px;opacity:.9}
+  .zone-tabs button[aria-selected="true"]{background:var(--panel-3);color:var(--text);box-shadow:0 1px 0 var(--line-strong)}
+  .zone-tabs button:hover:not([aria-selected="true"]){color:var(--text)}
+
+  .spacer{flex:1 1 auto}
+  .tool-group{display:flex;align-items:center;gap:2px;background:var(--panel-2);padding:4px;border-radius:11px;border:1px solid var(--line)}
+  .icon-btn{
+    width:34px;height:34px;border:0;background:transparent;color:var(--muted);border-radius:8px;
+    cursor:pointer;display:grid;place-items:center;transition:.15s;position:relative;
+  }
+  .icon-btn:hover{background:var(--panel-3);color:var(--text)}
+  .icon-btn:disabled{opacity:.35;cursor:default}
+  .icon-btn svg{width:18px;height:18px}
+  .icon-btn.wide{width:auto;padding:0 12px;gap:7px;font-size:12.5px;font-weight:550}
+
+  /* ---------- Body grid ---------- */
+  .body{flex:1 1 auto;display:grid;grid-template-columns:248px 1fr 300px;min-height:0}
+  .rail{background:var(--panel);display:flex;flex-direction:column;min-height:0;overflow-y:auto}
+  .rail.left{border-inline-end:1px solid var(--line)}
+  .rail.right{border-inline-start:1px solid var(--line)}
+
+  .rail::-webkit-scrollbar,.gallery::-webkit-scrollbar{width:10px}
+  .rail::-webkit-scrollbar-thumb{background:var(--panel-3);border-radius:20px;border:3px solid var(--panel)}
+
+  .section{padding:16px 15px;border-bottom:1px solid var(--line)}
+  .section:last-child{border-bottom:0}
+  .section-h{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px}
+  .section-h .t{font-size:11px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  [dir="rtl"] .section-h .t{letter-spacing:0}
+  .section-h .badge{font-size:11px;color:var(--muted-2);font-variant-numeric:tabular-nums}
+
+  /* Upload dropzone */
+  .drop{
+    border:1.5px dashed var(--line-strong);border-radius:var(--radius);padding:18px 14px;text-align:center;
+    cursor:pointer;transition:.18s;background:var(--panel-2);
+  }
+  .drop:hover,.drop.hot{border-color:var(--accent);background:var(--accent-soft)}
+  .drop .up{width:34px;height:34px;margin:0 auto 8px;border-radius:10px;background:var(--panel-3);display:grid;place-items:center;color:var(--accent)}
+  .drop .up svg{width:19px;height:19px}
+  .drop b{display:block;font-size:13px;font-weight:600}
+  .drop span{display:block;font-size:11.5px;color:var(--muted-2);margin-top:3px}
+
+  /* Design gallery */
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
+  .thumb{
+    position:relative;aspect-ratio:1;border-radius:11px;overflow:hidden;cursor:pointer;
+    border:2px solid transparent;background:var(--panel-2);
+    background-image:
+      linear-gradient(45deg,var(--panel-3) 25%,transparent 25%,transparent 75%,var(--panel-3) 75%),
+      linear-gradient(45deg,var(--panel-3) 25%,transparent 25%,transparent 75%,var(--panel-3) 75%);
+    background-size:14px 14px;background-position:0 0,7px 7px;
+  }
+  .thumb img{width:100%;height:100%;object-fit:contain;display:block}
+  .thumb.active{border-color:var(--accent)}
+  .thumb .del{
+    position:absolute;top:4px;inset-inline-end:4px;width:20px;height:20px;border-radius:6px;border:0;
+    background:rgba(0,0,0,.55);color:#fff;cursor:pointer;display:none;place-items:center;backdrop-filter:blur(4px);
+  }
+  .thumb:hover .del{display:grid}
+  .thumb .del svg{width:12px;height:12px}
+  .thumb .tag{position:absolute;bottom:0;inset-inline:0;padding:3px 6px;font-size:9.5px;
+    background:linear-gradient(0deg,rgba(0,0,0,.7),transparent);color:#fff;text-align:start;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thumb.sample .tag{background:linear-gradient(0deg,rgba(0,0,0,.65),transparent)}
+
+  .empty{color:var(--muted-2);font-size:12.5px;text-align:center;padding:16px 8px;line-height:1.5}
+
+  /* ---------- Stage ---------- */
+  .stage-wrap{position:relative;background:
+      radial-gradient(120% 80% at 50% 0%,color-mix(in srgb,var(--accent) 6%,var(--stage)),var(--stage) 60%);
+    min-height:0;overflow:hidden;display:flex;flex-direction:column}
+  #stage{flex:1 1 auto;display:block;touch-action:none;cursor:default}
+  .stage-hint{
+    position:absolute;top:14px;left:50%;transform:translateX(-50%);
+    font-size:12px;color:var(--muted);background:var(--panel);border:1px solid var(--line);
+    padding:6px 13px;border-radius:20px;pointer-events:none;opacity:0;transition:.3s;white-space:nowrap;
+    box-shadow:var(--shadow)
+  }
+  .stage-hint.show{opacity:1}
+
+  .stage-foot{
+    position:absolute;bottom:14px;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);
+    padding:5px;border-radius:12px;box-shadow:var(--shadow)
+  }
+  .stage-foot .zbtn{width:30px;height:30px;border:0;background:transparent;color:var(--muted);border-radius:7px;cursor:pointer;display:grid;place-items:center}
+  .stage-foot .zbtn:hover{background:var(--panel-3);color:var(--text)}
+  .stage-foot .zval{font-size:12px;color:var(--text);min-width:46px;text-align:center;font-variant-numeric:tabular-nums;font-family:var(--mono)}
+  .stage-foot .sep{width:1px;height:20px;background:var(--line)}
+  .stage-foot .zbtn svg{width:16px;height:16px}
+
+  .finish-row{position:absolute;top:14px;inset-inline-start:14px;display:flex;gap:7px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);padding:7px 9px;border-radius:12px;box-shadow:var(--shadow)}
+  .finish-row .lbl{font-size:11px;color:var(--muted);font-weight:600}
+  .sw{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-strong);cursor:pointer;padding:0;transition:.12s}
+  .sw:hover{transform:scale(1.12)}
+  .sw.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+  /* ---------- Right inspector ---------- */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field > label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:7px;font-weight:550}
+  .field .val{font-family:var(--mono);font-size:11.5px;color:var(--text);font-variant-numeric:tabular-nums}
+
+  input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;
+    background:var(--panel-3);outline:none;cursor:pointer}
+  input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--accent);cursor:pointer;border:3px solid var(--panel);box-shadow:0 0 0 1px var(--line-strong)}
+  input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);
+    cursor:pointer;border:3px solid var(--panel)}
+  input[type="range"]:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+  .switch input:focus-visible + .track{outline:2px solid var(--accent);outline-offset:2px}
+  .thumb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .drop:focus-visible{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);outline:none}
+
+  .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mini{
+    border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;
+    padding:9px 8px;font-size:12.5px;font-weight:550;cursor:pointer;transition:.14s;
+    display:flex;align-items:center;justify-content:center;gap:6px
+  }
+  .mini:hover{border-color:var(--line-strong);background:var(--panel-3)}
+  .mini svg{width:14px;height:14px;color:var(--muted)}
+  .mini.wide{grid-column:1/-1}
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13px}
+  .toggle-row .cap{color:var(--text)}
+  .toggle-row .cap small{display:block;color:var(--muted-2);font-size:11px;margin-top:2px;font-weight:400}
+  .switch{position:relative;width:38px;height:22px;flex:0 0 auto;cursor:pointer}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .switch .track{position:absolute;inset:0;background:var(--panel-3);border-radius:20px;transition:.18s;border:1px solid var(--line)}
+  .switch .knob{position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .switch input:checked + .track{background:var(--accent);border-color:transparent}
+  .switch input:checked ~ .knob{inset-inline-start:18px}
+
+  .note-line{font-size:11.5px;color:var(--muted-2);line-height:1.5;margin:0 0 12px}
+  .note-line.accent{background:var(--cut-soft);color:var(--text);padding:9px 11px;border-radius:9px;border:1px solid color-mix(in srgb,var(--cut) 30%,transparent)}
+  .link-btn{border:0;background:transparent;color:var(--accent);font-size:11.5px;font-weight:600;cursor:pointer;padding:0}
+  .link-btn:hover{text-decoration:underline}
+  .dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  .dim{display:flex;flex-direction:column;gap:5px}
+  .dim label{font-size:11px;color:var(--muted);font-weight:550}
+  .dim .inp{display:flex;align-items:center;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:0 8px}
+  .dim .inp:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .dim input{width:100%;border:0;background:transparent;color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 0;outline:none;font-variant-numeric:tabular-nums}
+  .dim input::-webkit-outer-spin-button,.dim input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .dim input[type=number]{-moz-appearance:textfield}
+  .dim .u{font-size:10.5px;color:var(--muted-2);flex:0 0 auto}
+  .readout{background:var(--panel-2);border:1px solid var(--line);border-radius:11px;padding:12px 13px;font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.7}
+  .readout .row{display:flex;justify-content:space-between;gap:10px}
+  .readout .row b{color:var(--text);font-weight:600}
+  .readout .row .u{color:var(--cut)}
+
+  .seg{display:flex;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:3px;gap:2px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:550;padding:6px 4px;border-radius:6px;cursor:pointer;transition:.13s;font-family:var(--mono)}
+  .seg button.on{background:var(--panel-3);color:var(--text)}
+
+  .cta{
+    width:100%;border:0;border-radius:11px;padding:12px;font-size:13.5px;font-weight:650;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:.15s;
+  }
+  .cta svg{width:16px;height:16px}
+  .cta.primary{background:var(--accent);color:var(--accent-ink);box-shadow:0 8px 20px -8px var(--accent)}
+  .cta.primary:hover{filter:brightness(1.08)}
+  .cta.ghost{background:var(--panel-2);color:var(--text);border:1px solid var(--line)}
+  .cta.ghost:hover{border-color:var(--cut);color:var(--cut)}
+  .cta.ghost svg{color:var(--cut)}
+
+  .swatch-line{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+  .cswatch{width:26px;height:26px;border-radius:8px;border:2px solid var(--line-strong);cursor:pointer;padding:0}
+  .cswatch.active{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+  .cswatch.none{display:grid;place-items:center;background:var(--panel-2);color:var(--muted)}
+  .cswatch.none svg{width:14px;height:14px}
+  .cpick{width:26px;height:26px;border-radius:8px;border:2px solid var(--line-strong);background:var(--panel-2);padding:0;cursor:pointer;overflow:hidden}
+  .cpick input{opacity:0;width:100%;height:100%;cursor:pointer}
+
+  /* ---------- Toast + modal ---------- */
+  .toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:var(--panel);border:1px solid var(--line-strong);color:var(--text);padding:11px 18px;border-radius:12px;
+    font-size:13px;box-shadow:var(--shadow);transition:.28s;z-index:60;display:flex;align-items:center;gap:9px}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .toast svg{width:16px;height:16px;color:var(--good)}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(5,7,12,.6);backdrop-filter:blur(6px);z-index:80;
+    display:none;place-items:center;padding:20px}
+  .modal-bg.show{display:grid}
+  .modal{background:var(--panel);border:1px solid var(--line-strong);border-radius:18px;max-width:440px;width:100%;
+    padding:26px;box-shadow:var(--shadow);max-height:88vh;overflow:auto}
+  .modal h2{margin:0 0 4px;font-size:18px;letter-spacing:-.01em}
+  .modal .lede{color:var(--muted);font-size:13px;margin:0 0 18px;line-height:1.55}
+  .modal .kb{display:grid;gap:10px}
+  .modal .kb .r{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--text)}
+  .modal .kb .r .k{font-family:var(--mono);font-size:11px;background:var(--panel-2);border:1px solid var(--line);
+    border-bottom-width:2px;border-radius:6px;padding:3px 7px;color:var(--muted);min-width:60px;text-align:center;flex:0 0 auto}
+  .modal .kb .r span{color:var(--muted)}
+  .modal-close{width:100%;margin-top:20px;border:0;background:var(--accent);color:#fff;border-radius:10px;padding:11px;font-weight:600;cursor:pointer;font-size:13.5px}
+
+  /* ---------- Mobile ---------- */
+  .mobile-note{display:none}
+  @media (max-width:1080px){
+    .body{grid-template-columns:210px 1fr 260px}
+    .brand .sub{display:none}
+  }
+  @media (max-width:820px){
+    .app{overflow:auto}
+    .mobile-note{display:flex;align-items:center;gap:10px;background:var(--cut-soft);color:var(--text);
+      padding:10px 14px;font-size:12.5px;border-bottom:1px solid var(--line)}
+    .mobile-note svg{width:16px;height:16px;color:var(--cut);flex:0 0 auto}
+    .body{grid-template-columns:1fr;height:auto}
+    .rail{max-height:none;border:0;border-bottom:1px solid var(--line)}
+    .rail.right{order:3}
+    .stage-wrap{order:2;height:64vh;min-height:420px}
+    .zone-tabs button{padding:7px 11px}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="app" id="app">
+  <div class="mobile-note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+    <span data-i18n="mobileNote">Best used on a laptop or tablet in landscape for precise placement.</span>
+  </div>
+
+  <!-- Top bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="glyph">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="7" y="2" width="10" height="20" rx="2.6"/><circle cx="12" cy="7" r="1.6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="name" data-i18n="appName">Sticker Studio</div>
+        <div class="sub">iPhone 17 Pro Max · 78 × 163.4 mm</div>
+      </div>
+    </div>
+
+    <div class="zone-tabs" role="tablist" aria-label="Sticker zone">
+      <button role="tab" data-zone="camera" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2.5" y="6" width="19" height="12" rx="3"/><circle cx="8" cy="12" r="2.4"/><circle cx="15.5" cy="10" r="1.3"/></svg>
+        <span data-i18n="zoneCamera">Camera island</span>
+      </button>
+      <button role="tab" data-zone="back" aria-selected="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="2.5" width="12" height="19" rx="3"/></svg>
+        <span data-i18n="zoneBack">Back panel</span>
+      </button>
+    </div>
+
+    <div class="spacer"></div>
+
+    <div class="tool-group">
+      <button class="icon-btn" id="undoBtn" title="Undo" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a6 6 0 0 1 0 12h-3"/></svg>
+      </button>
+      <button class="icon-btn" id="redoBtn" title="Redo" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a6 6 0 0 0 0 12h3"/></svg>
+      </button>
+    </div>
+    <div class="tool-group">
+      <button class="icon-btn wide" id="langBtn" title="Language">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+        <span id="langLabel">عربي</span>
+      </button>
+      <button class="icon-btn" id="themeBtn" title="Theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="icon-btn" id="helpBtn" title="Help">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 4.5 1.5c0 1.7-2.5 2-2.5 3.5"/><path d="M12 17.5h.01"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="body">
+    <!-- LEFT: designs -->
+    <aside class="rail left">
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="artwork">Artwork</span></div>
+        <div class="drop" id="drop">
+          <div class="up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0-4 4m4-4 4 4"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></div>
+          <b data-i18n="uploadTitle">Upload a design</b>
+          <span data-i18n="uploadSub">Drop image, click, or paste — PNG / JPG / SVG</span>
+        </div>
+        <div class="gallery" id="gallery"></div>
+      </div>
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="samples">Quick samples</span></div>
+        <div class="gallery" id="sampleGallery"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: stage -->
+    <main class="stage-wrap">
+      <div class="finish-row" id="finishRow">
+        <span class="lbl" data-i18n="finish">Phone</span>
+      </div>
+      <canvas id="stage"></canvas>
+      <div class="stage-hint" id="hint"></div>
+      <div class="stage-foot">
+        <button class="zbtn" id="zoomOut" title="Zoom out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14"/></svg></button>
+        <span class="zval" id="zoomVal">100%</span>
+        <button class="zbtn" id="zoomIn" title="Zoom in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="sep"></div>
+        <button class="zbtn" id="zoomFit" title="Fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
+      </div>
+    </main>
+
+    <!-- RIGHT: inspector -->
+    <aside class="rail right">
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="transform">Placement</span>
+          <span class="badge" id="zoneDimBadge"></span></div>
+
+        <div class="field">
+          <label><span data-i18n="scale">Size</span><span class="val" id="scaleVal">100%</span></label>
+          <input type="range" id="scale" min="10" max="500" value="100">
+        </div>
+        <div class="field">
+          <label><span data-i18n="rotate">Rotation</span><span class="val" id="rotVal">0°</span></label>
+          <input type="range" id="rotate" min="-180" max="180" value="0">
+        </div>
+
+        <div class="btn-grid">
+          <button class="mini" id="fitBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg><span data-i18n="fit">Fit</span></button>
+          <button class="mini" id="fillBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H3v6M15 21h6v-6M3 3l7 7M21 21l-7-7"/></svg><span data-i18n="fill">Fill</span></button>
+          <button class="mini" id="centerBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span data-i18n="center">Center</span></button>
+          <button class="mini" id="resetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span data-i18n="reset">Reset</span></button>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="stickerOpts">Sticker options</span></div>
+
+        <div class="field">
+          <label><span data-i18n="bg">Backing color</span></label>
+          <div class="swatch-line" id="bgSwatches"></div>
+        </div>
+
+        <div class="toggle-row">
+          <div class="cap"><span data-i18n="dieCut">Die-cut to shape</span><small data-i18n="dieCutSub">Trim artwork to the sticker outline</small></div>
+          <label class="switch"><input type="checkbox" id="clipTog" checked><span class="track"></span><span class="knob"></span></label>
+        </div>
+        <div class="toggle-row" id="cutoutRow">
+          <div class="cap"><span id="cutoutLabel" data-i18n="lensCut">Lens cut-outs</span><small id="cutoutSub" data-i18n="lensCutSub">Holes for cameras, flash & sensors</small></div>
+          <label class="switch"><input type="checkbox" id="cutoutTog" checked><span class="track"></span><span class="knob"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div class="cap"><span data-i18n="guides">Show cut & bleed guides</span><small data-i18n="guidesSub">On-screen only, never exported</small></div>
+          <label class="switch"><input type="checkbox" id="guideTog" checked><span class="track"></span><span class="knob"></span></label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="exactSize">Exact size (mm)</span>
+          <button class="link-btn" id="geoReset" data-i18n="resetDefault">Reset</button></div>
+        <p class="note-line" data-i18n="exactHint">Set these to match your real die-cut. This is the printed sticker size.</p>
+        <div class="dim-grid" id="dimGrid"></div>
+      </div>
+
+      <div class="section">
+        <div class="section-h"><span class="t" data-i18n="output">Export</span></div>
+
+        <div class="note-line accent" data-i18n="exportNote">Print file = the whole image at true size. Your cutting machine makes the holes and outline.</div>
+
+        <div class="field">
+          <label><span data-i18n="quality">Print quality</span><span class="val" id="dpiOut"></span></label>
+          <div class="seg" id="dpiSeg">
+            <button data-dpi="150">150</button>
+            <button data-dpi="300" class="on">300</button>
+            <button data-dpi="600">600</button>
+          </div>
+        </div>
+        <div class="field">
+          <label><span data-i18n="bleed">Bleed</span><span class="val" id="bleedOut">0 mm</span></label>
+          <div class="seg" id="bleedSeg">
+            <button data-bleed="0" class="on" data-i18n="bleedNone">None</button>
+            <button data-bleed="2">2 mm</button>
+            <button data-bleed="3">3 mm</button>
+          </div>
+        </div>
+
+        <div class="readout" id="readout"></div>
+
+        <div style="display:grid;gap:9px;margin-top:13px">
+          <button class="cta primary" id="exportPrint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+            <span data-i18n="dlPrint">Download print file</span>
+          </button>
+          <button class="cta ghost" id="exportMock">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0-4 4m4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+            <span data-i18n="dlMock">Save preview mockup</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span id="toastMsg"></span></div>
+
+<div class="modal-bg" id="helpBg">
+  <div class="modal">
+    <h2 data-i18n="helpTitle">How to use</h2>
+    <p class="lede" data-i18n="helpLede">Place a customer's design on the exact camera island or back panel of the iPhone 17 Pro Max, then export a print-ready file and a preview.</p>
+    <div class="kb">
+      <div class="r"><span class="k" data-i18n="hStep1k">1 · Upload</span><span data-i18n="hStep1">Drop, click, or paste the customer's image on the left.</span></div>
+      <div class="r"><span class="k" data-i18n="hStep2k">2 · Place</span><span data-i18n="hStep2">Drag on the phone to move. Corner handles resize, top handle rotates.</span></div>
+      <div class="r"><span class="k" data-i18n="hStep3k">3 · Trim</span><span data-i18n="hStep3">Die-cut trims art to the sticker; lens holes stay clear.</span></div>
+      <div class="r"><span class="k" data-i18n="hStep4k">4 · Export</span><span data-i18n="hStep4">Print file = transparent die-cut art. Mockup = the preview image.</span></div>
+      <div class="r"><span class="k">⌫ / Del</span><span data-i18n="hKeyDel">Remove artwork from this zone.</span></div>
+      <div class="r"><span class="k" data-i18n="arrows">Arrows</span><span data-i18n="hKeyArrow">Nudge by 0.5 mm · hold Shift for 2 mm.</span></div>
+      <div class="r"><span class="k">⌘/Ctrl Z</span><span data-i18n="hKeyUndo">Undo · Shift for redo.</span></div>
+    </div>
+    <button class="modal-close" id="helpClose" data-i18n="gotIt">Got it</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp" multiple hidden>
+
+<script>
+(function(){
+"use strict";
+
+/* ============================================================
+   1. DEVICE GEOMETRY  (all in millimetres, origin = phone top-left)
+   iPhone 17 Pro Max: 78.0 × 163.4 mm. Plateau + lens layout modeled
+   to the real 17 Pro arrangement (adjustable below).
+   ============================================================ */
+const PHONE={w:78,h:163.4,r:18};   // official body size (mm)
+
+// ---- Editable sticker geometry (mm). Camera-island footprint & lens layout come
+// from Apple's OFFICIAL iPhone 17 Pro Max Dimensional Drawing: plateau ≈ 73.8 × 48.0 mm,
+// centred; lenses Ø16.20, flash Ø6.80, LiDAR Ø6.65, mic Ø1.15; cluster vertically centred.
+// The shop can still fine-tune to match their exact die-cut. ----
+const GEO_DEFAULT={
+  camW:73.8, camH:48.0, camR:14, camTop:4,   // camera-island sticker (plateau)
+  backW:76, backH:161, backR:17, backTop:1.2 // back-panel sticker
+};
+function geoCam(){const g=state.geo;return{x:(PHONE.w-g.camW)/2,y:g.camTop,w:g.camW,h:g.camH,r:Math.min(g.camR,g.camH/2,g.camW/2)};}
+function geoBack(){const g=state.geo;return{x:(PHONE.w-g.backW)/2,y:g.backTop,w:g.backW,h:g.backH,r:g.backR};}
+function geoPlateau(){const z=geoCam();return{x:z.x-1,y:z.y-1,w:z.w+2,h:z.h+2,r:z.r+1};}
+
+// Lens / sensor positions as fractions of the camera-island zone (from Apple's
+// drawing). Lens holes are cut by the MACHINE, so they are preview-only and are
+// never punched into the exported print file.
+const LENSES=[
+  {fx:0.195, fy:0.300, fr:0.110,  type:'lens'},   // Wide       Ø16.20
+  {fx:0.195, fy:0.700, fr:0.110,  type:'lens'},   // Ultra-Wide Ø16.20
+  {fx:0.438, fy:0.500, fr:0.110,  type:'lens'},   // Telephoto  Ø16.20
+  {fx:0.869, fy:0.288, fr:0.0461, type:'flash'},  // Flash      Ø6.80
+  {fx:0.780, fy:0.500, fr:0.0078, type:'mic'},    // Rear mic   Ø1.15
+  {fx:0.869, fy:0.712, fr:0.0451, type:'lidar'}   // LiDAR      Ø6.65
+];
+function lensAbs(){const z=geoCam();return LENSES.map(L=>({x:z.x+L.fx*z.w, y:z.y+L.fy*z.h, r:L.fr*z.w, type:L.type}));}
+const APPLE={x:39,y:106,r:10};
+
+/* Device finishes for the mockup body. hi/lo = body gradient (top→bottom),
+   rail = polished frame edge, plateau = raised camera bar. */
+const FINISHES=[
+  {id:'orange', name:'Cosmic Orange',    hi:'#f0a066', body:'#e07b3e', lo:'#b25f2b', rail:'#f6bd90', plateau:'#e6864a'},
+  {id:'silver', name:'Silver Titanium',  hi:'#eef0f4', body:'#d8dbe1', lo:'#b4b8c1', rail:'#f7f8fa', plateau:'#e0e2e7'},
+  {id:'blue',   name:'Deep Blue',        hi:'#43587a', body:'#2f3d54', lo:'#1c2536', rail:'#63799c', plateau:'#33425c'},
+  {id:'black',  name:'Black Titanium',   hi:'#2c2e34', body:'#1b1c21', lo:'#0c0d10', rail:'#42444b', plateau:'#24262b'},
+  {id:'gold',   name:'Desert Gold',      hi:'#e7d4ab', body:'#d3bd90', lo:'#ac9668', rail:'#f1e3c0', plateau:'#dbc699'}
+];
+
+/* Sticker backing colours */
+const BG_COLORS=['#0b5cff','#e8113c','#111318','#ffffff','#12b76a','#f5c518'];
+
+/* ============================================================
+   2. STATE
+   ============================================================ */
+function freshZone(){return{designId:null,tx:0,ty:0,scale:1,rot:0,bg:null};}
+const state={
+  activeZone:'camera',
+  lang:'en',
+  finish:'orange',
+  dpi:300,
+  bleed:0,
+  clip:true,
+  cutouts:true,
+  guides:true,
+  zoom:1,
+  geo:Object.assign({},GEO_DEFAULT),
+  designs:[],
+  zones:{camera:freshZone(),back:freshZone()}
+};
+// per-zone sticker option memory
+state.zones.camera.cutouts=true;
+state.zones.back.apple=false;
+
+const imgCache={}; // id -> HTMLImageElement
+
+/* ============================================================
+   3. i18n
+   ============================================================ */
+const I18N={
+  en:{
+    appName:"Sticker Studio", zoneCamera:"Camera island", zoneBack:"Back panel",
+    artwork:"Artwork", uploadTitle:"Upload a design", uploadSub:"Drop image, click, or paste — PNG / JPG / SVG",
+    samples:"Quick samples", transform:"Placement", scale:"Size", rotate:"Rotation",
+    fit:"Fit", fill:"Fill", center:"Center", reset:"Reset",
+    stickerOpts:"Sticker options", bg:"Backing color",
+    dieCut:"Die-cut to shape", dieCutSub:"Trims the sticker & print file to the island outline",
+    lensCut:"Show lens holes", lensCutSub:"Preview only — the machine cuts these",
+    appleCut:"Show logo hole", appleCutSub:"Preview only — leave the logo area clear",
+    guides:"Show cut & bleed guides", guidesSub:"On-screen only, never exported",
+    exactSize:"Exact size (mm)", resetDefault:"Reset",
+    exactHint:"Set these to match your real die-cut. This is the printed sticker size.",
+    exportNote:"Print file = your design die-cut to the island shape, at true size. The machine cuts only the lens holes.",
+    dim_w:"Width", dim_h:"Height", dim_r:"Corner", dim_top:"Top gap",
+    output:"Export", quality:"Print quality", bleed:"Bleed", bleedNone:"None",
+    dlPrint:"Download print file", dlMock:"Save preview mockup", finish:"Phone",
+    helpTitle:"How to use",
+    helpLede:"Place a customer's design on the exact camera island or back panel of the iPhone 17 Pro Max, then export a print-ready file and a preview.",
+    hStep1k:"1 · Upload", hStep1:"Drop, click, or paste the customer's image on the left.",
+    hStep2k:"2 · Place", hStep2:"Drag on the phone to move. Corner handles resize, top handle rotates.",
+    hStep3k:"3 · Preview", hStep3:"The preview shows the lens holes so you can arrange art around them.",
+    hStep4k:"4 · Export", hStep4:"Print file = your design die-cut to the island shape (the machine cuts the lens holes). Mockup = preview picture.",
+    hKeyDel:"Remove artwork from this zone.", arrows:"Arrows", hKeyArrow:"Nudge by 0.5 mm · hold Shift for 2 mm.",
+    hKeyUndo:"Undo · Shift for redo.", gotIt:"Got it",
+    mobileNote:"Best used on a laptop or tablet in landscape for precise placement.",
+    hintPlace:"Drag to move · drag a corner to resize · top handle to rotate",
+    hintEmpty:"Upload or pick a design, then drag it onto the phone",
+    emptyGallery:"No uploads yet",
+    tPrint:"Print file saved", tMock:"Mockup saved", tAdded:"Design added", tNoArt:"Add a design to this zone first",
+    tRemoved:"Removed from zone",
+    rTrim:"Trim size", rBleed:"With bleed", rPixels:"Output", rQ:"Quality"
+  },
+  ar:{
+    appName:"استوديو الاستكرات", zoneCamera:"جزيرة الكاميرا", zoneBack:"الظهر",
+    artwork:"التصميم", uploadTitle:"ارفع تصميمًا", uploadSub:"أفلت صورة أو انقر أو الصق — PNG / JPG / SVG",
+    samples:"عينات سريعة", transform:"الموضع", scale:"الحجم", rotate:"التدوير",
+    fit:"احتواء", fill:"ملء", center:"توسيط", reset:"إعادة",
+    stickerOpts:"خيارات الاستكر", bg:"لون الخلفية",
+    dieCut:"قص حسب الشكل", dieCutSub:"يقص الاستكر وملف الطباعة على حدود الجزيرة",
+    lensCut:"إظهار فتحات العدسات", lensCutSub:"للمعاينة فقط — الماكينة هي التي تقصّها",
+    appleCut:"إظهار فتحة الشعار", appleCutSub:"للمعاينة فقط — اترك منطقة الشعار فارغة",
+    guides:"إظهار خطوط القص والهامش", guidesSub:"على الشاشة فقط، لا تُصدّر",
+    exactSize:"المقاس الدقيق (مم)", resetDefault:"إعادة",
+    exactHint:"اضبطها لتطابق قالب القص لديك. هذا هو مقاس الاستكر المطبوع.",
+    exportNote:"ملف الطباعة = تصميمك مقصوصًا على شكل الجزيرة بالمقاس الحقيقي. الماكينة تقص فتحات العدسات فقط.",
+    dim_w:"العرض", dim_h:"الارتفاع", dim_r:"الزوايا", dim_top:"الهامش العلوي",
+    output:"التصدير", quality:"جودة الطباعة", bleed:"هامش القص", bleedNone:"بدون",
+    dlPrint:"تنزيل ملف الطباعة", dlMock:"حفظ صورة المعاينة", finish:"الجوال",
+    helpTitle:"طريقة الاستخدام",
+    helpLede:"ضع تصميم العميل على جزيرة الكاميرا أو ظهر آيفون 17 برو ماكس بالمقاسات الصحيحة، ثم صدّر ملف طباعة جاهز ومعاينة.",
+    hStep1k:"١ · ارفع", hStep1:"أفلت أو انقر أو الصق صورة العميل على اليسار.",
+    hStep2k:"٢ · ضع", hStep2:"اسحب على الجوال للتحريك. الزوايا للتحجيم والمقبض العلوي للتدوير.",
+    hStep3k:"٣ · معاينة", hStep3:"المعاينة تُظهر فتحات العدسات لتنسّق التصميم حولها.",
+    hStep4k:"٤ · صدّر", hStep4:"ملف الطباعة = تصميمك مقصوصًا على شكل الجزيرة (الماكينة تقص فتحات العدسات). المعاينة = صورة العرض.",
+    hKeyDel:"إزالة التصميم من هذه المنطقة.", arrows:"الأسهم", hKeyArrow:"تحريك ٠٫٥ مم · Shift لـ ٢ مم.",
+    hKeyUndo:"تراجع · Shift للإعادة.", gotIt:"تمام",
+    mobileNote:"يُفضّل استخدامه على كمبيوتر أو جهاز لوحي بالوضع الأفقي لدقة أعلى.",
+    hintPlace:"اسحب للتحريك · اسحب زاوية للتحجيم · المقبض العلوي للتدوير",
+    hintEmpty:"ارفع أو اختر تصميمًا ثم اسحبه على الجوال",
+    emptyGallery:"لا توجد صور بعد",
+    tPrint:"تم حفظ ملف الطباعة", tMock:"تم حفظ المعاينة", tAdded:"تمت إضافة التصميم", tNoArt:"أضف تصميمًا لهذه المنطقة أولًا",
+    tRemoved:"تمت الإزالة من المنطقة",
+    rTrim:"مقاس القص", rBleed:"مع الهامش", rPixels:"الناتج", rQ:"الجودة"
+  }
+};
+function t(k){return (I18N[state.lang]&&I18N[state.lang][k])||I18N.en[k]||k;}
+
+/* ============================================================
+   4. SAMPLE DESIGNS (inline SVG data URIs — for demo + testing)
+   ============================================================ */
+function svgURI(inner,w,h){
+  const s='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'">'+inner+'</svg>';
+  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s);
+}
+const SAMPLES=[
+  {name:'Hilal blue', src:svgURI('<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b57ff"/><stop offset="1" stop-color="#0a3fbf"/></linearGradient></defs><rect width="600" height="600" fill="url(#g)"/><g fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="10"><path d="M0 460 L600 260"/><path d="M0 540 L600 340"/><path d="M0 380 L600 180"/></g>',600,600)},
+  {name:'Carbon', src:svgURI('<rect width="600" height="600" fill="#15171c"/><g fill="#22262e"><rect x="0" y="0" width="30" height="30"/><rect x="30" y="30" width="30" height="30"/></g><pattern id="c" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="600" height="600" fill="#15171c"/><rect x="0" y="0" width="30" height="30" fill="#22262e"/><rect x="30" y="30" width="30" height="30" fill="#22262e"/></pattern><rect width="600" height="600" fill="url(#c)"/>',600,600)},
+  {name:'Sunset', src:svgURI('<defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a3d"/><stop offset="0.5" stop-color="#ff5f6d"/><stop offset="1" stop-color="#7b2ff7"/></linearGradient></defs><rect width="600" height="600" fill="url(#s)"/><circle cx="300" cy="330" r="120" fill="#ffe08a" fill-opacity="0.85"/>',600,600)},
+  {name:'Marble', src:svgURI('<rect width="600" height="600" fill="#f2f0eb"/><g fill="none" stroke="#c4b7a6" stroke-width="3" stroke-opacity="0.7"><path d="M-20 120 C 150 60 300 220 620 140"/><path d="M-20 300 C 200 250 340 420 620 320"/><path d="M-20 470 C 160 430 380 560 620 500"/></g><g fill="none" stroke="#8a7c68" stroke-width="1.5" stroke-opacity="0.5"><path d="M-20 160 C 150 110 320 250 620 190"/></g>',600,600)}
+];
+
+/* ============================================================
+   5. CANVAS + RENDER
+   ============================================================ */
+const stage=document.getElementById('stage');
+const ctx=stage.getContext('2d');
+let VIEW={S:2,ox:0,oy:0}; // mm->css-px: px = o + mm*S  (stage view)
+let DPR=Math.min(window.devicePixelRatio||1,2.5);
+let cssW=0,cssH=0;
+
+function resize(){
+  const r=stage.parentElement.getBoundingClientRect();
+  cssW=Math.max(100,r.width); cssH=Math.max(100,r.height);
+  DPR=Math.min(window.devicePixelRatio||1,2.5);
+  stage.width=Math.round(cssW*DPR); stage.height=Math.round(cssH*DPR);
+  stage.style.width=cssW+'px'; stage.style.height=cssH+'px';
+  computeView(); draw();
+}
+function computeView(){
+  const pad=54;
+  const availW=cssW-pad*2, availH=cssH-pad*2;
+  const fit=Math.min(availW/PHONE.w, availH/PHONE.h);
+  VIEW.S=fit*state.zoom;
+  VIEW.ox=(cssW-PHONE.w*VIEW.S)/2;
+  VIEW.oy=(cssH-PHONE.h*VIEW.S)/2;
+}
+const mx=mm=>VIEW.ox+mm*VIEW.S, my=mm=>VIEW.oy+mm*VIEW.S; // for reference (not used everywhere)
+function w2s(x,y){return{x:VIEW.ox+x*VIEW.S, y:VIEW.oy+y*VIEW.S};}
+function s2w(sx,sy){return{x:(sx-VIEW.ox)/VIEW.S, y:(sy-VIEW.oy)/VIEW.S};}
+/* composite an offscreen (device-px) layer, then return to the current transform */
+function blit(layer,alpha){
+  ctx.save();
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalAlpha=alpha==null?1:alpha;
+  ctx.drawImage(layer,0,0);
+  ctx.restore();
+}
+
+/* rounded-rect path in an arbitrary space via map(x,y)->{x,y} and scale s for radius */
+function roundRectPath(c,x,y,w,h,r,map,s){
+  r=Math.min(r,w/2,h/2);
+  const p=(X,Y)=>map(X,Y);
+  const rr=r*s;
+  let a;
+  a=p(x+r,y); c.moveTo(a.x,a.y);
+  a=p(x+w-r,y); c.lineTo(a.x,a.y);
+  let cc=p(x+w,y); let e=p(x+w,y+r); c.arcTo(cc.x,cc.y,e.x,e.y,rr);
+  a=p(x+w,y+h-r); c.lineTo(a.x,a.y);
+  cc=p(x+w,y+h); e=p(x+w-r,y+h); c.arcTo(cc.x,cc.y,e.x,e.y,rr);
+  a=p(x+r,y+h); c.lineTo(a.x,a.y);
+  cc=p(x,y+h); e=p(x,y+h-r); c.arcTo(cc.x,cc.y,e.x,e.y,rr);
+  a=p(x,y+r); c.lineTo(a.x,a.y);
+  cc=p(x,y); e=p(x+r,y); c.arcTo(cc.x,cc.y,e.x,e.y,rr);
+  c.closePath();
+}
+
+/* zone path (in given mapping) */
+function zonePath(c,zoneKey,map,s){
+  if(zoneKey==='camera'){
+    const z=geoCam();
+    roundRectPath(c,z.x,z.y,z.w,z.h,z.r,map,s);
+  }else{
+    // back outer, minus plateau notch (even-odd)
+    const z=geoBack(), p=geoPlateau();
+    roundRectPath(c,z.x,z.y,z.w,z.h,z.r,map,s);
+    roundRectPath(c,p.x,p.y,p.w,p.h,p.r,map,s);
+  }
+}
+
+/* Render one sticker layer onto an offscreen canvas.
+   opts: {W,H (px), map(x,y)->px, s (px/mm), clipShape (trim to island outline),
+          holes (punch lens/apple holes)}.
+   Editor & mockup use clipShape+holes for a realistic preview; the PRINT export
+   uses neither — it outputs the whole printed image and the cutter makes the holes.
+   Returns canvas or null if nothing to draw. */
+function renderSticker(zoneKey,opts){
+  const z=state.zones[zoneKey];
+  const img=z.designId?imgCache[z.designId]:null;
+  if(!img && !z.bg) return null;
+  const clipShape=!!opts.clipShape, holes=!!opts.holes;
+  const off=document.createElement('canvas');
+  off.width=opts.W; off.height=opts.H;
+  const o=off.getContext('2d');
+
+  o.save();
+  if(clipShape){
+    o.beginPath();
+    zonePath(o,zoneKey,opts.map,opts.s);
+    o.clip('evenodd');
+  }
+  // backing colour
+  if(z.bg){
+    o.fillStyle=z.bg;
+    if(clipShape){ o.beginPath(); zonePath(o,zoneKey,opts.map,opts.s); o.fill('evenodd'); }
+    else o.fillRect(0,0,opts.W,opts.H);
+  }
+  // artwork
+  if(img){
+    const c0=opts.map(z.tx,z.ty);                    // artwork center in px
+    const dispW=zoneDims(zoneKey).w*z.scale;          // mm
+    const dispH=dispW*(img.naturalHeight/img.naturalWidth);
+    const pw=dispW*opts.s, ph=dispH*opts.s;
+    o.save();
+    o.translate(c0.x,c0.y);
+    o.rotate(z.rot*Math.PI/180);
+    o.imageSmoothingQuality='high';
+    o.drawImage(img,-pw/2,-ph/2,pw,ph);
+    o.restore();
+  }
+  o.restore();
+
+  // punch preview holes (destination-out) — cameras / apple logo
+  if(holes){
+    o.save();
+    o.globalCompositeOperation='destination-out';
+    if(zoneKey==='camera' && z.cutouts){
+      lensAbs().forEach(L=>{
+        const cc=opts.map(L.x,L.y);
+        o.beginPath(); o.arc(cc.x,cc.y,L.r*opts.s,0,Math.PI*2); o.fill();
+      });
+    }
+    if(zoneKey==='back' && z.apple){
+      const cc=opts.map(APPLE.x,APPLE.y);
+      o.beginPath(); o.arc(cc.x,cc.y,APPLE.r*opts.s,0,Math.PI*2); o.fill();
+    }
+    o.restore();
+  }
+  return off;
+}
+
+function zoneDims(zoneKey){
+  return zoneKey==='camera'?geoCam():geoBack();
+}
+function zoneCenter(zoneKey){const d=zoneDims(zoneKey);return{x:d.x+d.w/2,y:d.y+d.h/2};}
+
+/* ---- Main stage scene ---- */
+function draw(){
+  ctx.save();
+  ctx.scale(DPR,DPR);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  const map=(x,y)=>w2s(x,y);
+  const s=VIEW.S;
+  const F=FINISHES.find(f=>f.id===state.finish)||FINISHES[0];
+
+  // ----- Phone body: drop shadow -----
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=54; ctx.shadowOffsetY=30;
+  ctx.fillStyle=F.body;
+  ctx.beginPath(); roundRectPath(ctx,0,0,PHONE.w,PHONE.h,PHONE.r,map,s); ctx.fill();
+  ctx.restore();
+
+  // body vertical finish gradient + diagonal sheen
+  ctx.save(); ctx.beginPath(); roundRectPath(ctx,0,0,PHONE.w,PHONE.h,PHONE.r,map,s); ctx.clip();
+  const bodyG=ctx.createLinearGradient(0,map(0,0).y,0,map(0,PHONE.h).y);
+  bodyG.addColorStop(0,F.hi); bodyG.addColorStop(.5,F.body); bodyG.addColorStop(1,F.lo);
+  ctx.fillStyle=bodyG; ctx.fillRect(0,0,cssW,cssH);
+  const sheen=ctx.createLinearGradient(map(0,0).x,map(0,0).y,map(PHONE.w,PHONE.h*.55).x,map(PHONE.w,PHONE.h*.55).y);
+  sheen.addColorStop(0,'rgba(255,255,255,.16)'); sheen.addColorStop(.4,'rgba(255,255,255,0)'); sheen.addColorStop(1,'rgba(255,255,255,0)');
+  ctx.fillStyle=sheen; ctx.fillRect(0,0,cssW,cssH);
+  ctx.restore();
+
+  // polished frame rim
+  ctx.save();
+  ctx.beginPath(); roundRectPath(ctx,0,0,PHONE.w,PHONE.h,PHONE.r,map,s);
+  ctx.lineWidth=Math.max(1.5,1.3*s); ctx.strokeStyle=F.rail; ctx.stroke();
+  ctx.beginPath(); roundRectPath(ctx,0.7,0.7,PHONE.w-1.4,PHONE.h-1.4,Math.max(1,PHONE.r-0.7),map,s);
+  ctx.lineWidth=Math.max(1,0.5*s); ctx.strokeStyle='rgba(0,0,0,.16)'; ctx.stroke();
+  ctx.restore();
+
+  // ----- BACK sticker (under plateau) -----
+  const backLayer=renderSticker('back',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:state.clip,holes:true});
+  // The offscreen uses DPR-scaled px so it aligns after we draw at 1:1 device px.
+  if(backLayer) blit(backLayer, state.activeZone==='back'?1:0.92);
+
+  // ----- PLATEAU raised camera bar -----
+  const PL=geoPlateau();
+  // soft shadow cast onto the back
+  ctx.save();
+  ctx.shadowColor='rgba(0,0,0,.42)'; ctx.shadowBlur=20; ctx.shadowOffsetY=8;
+  ctx.fillStyle=F.plateau;
+  ctx.beginPath(); roundRectPath(ctx,PL.x,PL.y,PL.w,PL.h,PL.r,map,s); ctx.fill();
+  ctx.restore();
+  // plateau finish gradient (top lighter)
+  ctx.save(); ctx.beginPath(); roundRectPath(ctx,PL.x,PL.y,PL.w,PL.h,PL.r,map,s); ctx.clip();
+  const plG=ctx.createLinearGradient(0,map(PL.x,PL.y).y,0,map(PL.x,PL.y+PL.h).y);
+  plG.addColorStop(0,F.hi); plG.addColorStop(1,F.lo);
+  ctx.globalAlpha=.55; ctx.fillStyle=plG; ctx.fillRect(0,0,cssW,cssH); ctx.globalAlpha=1;
+  ctx.restore();
+  // beveled rim: bright top-left highlight, dark contact line
+  ctx.save(); ctx.lineWidth=Math.max(1.2,0.9*s); ctx.strokeStyle='rgba(255,255,255,.30)';
+  ctx.beginPath(); roundRectPath(ctx,PL.x+0.4,PL.y+0.4,PL.w-0.8,PL.h-0.8,Math.max(1,PL.r-0.4),map,s); ctx.stroke(); ctx.restore();
+  ctx.save(); ctx.lineWidth=Math.max(1,0.7*s); ctx.strokeStyle='rgba(0,0,0,.22)';
+  ctx.beginPath(); roundRectPath(ctx,PL.x,PL.y,PL.w,PL.h,PL.r,map,s); ctx.stroke(); ctx.restore();
+
+  // ----- CAMERA sticker on plateau -----
+  const camLayer=renderSticker('camera',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:state.clip,holes:true});
+  if(camLayer) blit(camLayer, state.activeZone==='camera'?1:0.92);
+
+  // ----- Camera hardware (lenses) drawn on top so they show through cut-outs -----
+  if(lensesVisible()) drawLenses(ctx,map,s);
+
+  // ----- Apple logo emboss on back (if visible & not covered) -----
+  if(state.activeZone==='back'){ drawAppleMark(ctx,map,s); }
+
+  // ----- Active-zone guides + outline -----
+  if(state.guides){ drawGuides(ctx,state.activeZone,map,s); }
+  drawZoneOutline(ctx,state.activeZone,map,s);
+
+  // ----- Handles for active artwork -----
+  drawHandles(ctx);
+
+  ctx.restore();
+  updateReadout();
+}
+
+function lensesVisible(){const z=state.zones.camera; const has=z.designId||z.bg; return !(has && !z.cutouts);}
+function drawLenses(c,map,s){
+  const TAU=Math.PI*2;
+  lensAbs().forEach(L=>{
+    const p=map(L.x,L.y), R=L.r*s;
+    if(L.type==='lens'){
+      // contact shadow
+      c.save(); c.shadowColor='rgba(0,0,0,.45)'; c.shadowBlur=R*0.35; c.shadowOffsetY=R*0.08;
+      c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle='#0c0d10'; c.fill(); c.restore();
+      // brushed-metal bezel ring (diagonal light)
+      const bez=c.createLinearGradient(p.x-R,p.y-R,p.x+R,p.y+R);
+      bez.addColorStop(0,'#f2f3f6'); bez.addColorStop(.28,'#a9adb6'); bez.addColorStop(.52,'#565a63');
+      bez.addColorStop(.74,'#2b2d33'); bez.addColorStop(1,'#c3c7cf');
+      c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle=bez; c.fill();
+      // recessed black wall
+      c.beginPath(); c.arc(p.x,p.y,R*0.80,0,TAU); c.fillStyle='#0e1013'; c.fill();
+      c.lineWidth=Math.max(.6,R*0.03); c.strokeStyle='rgba(255,255,255,.08)';
+      c.beginPath(); c.arc(p.x,p.y,R*0.80,0,TAU); c.stroke();
+      // glass with anti-reflective blue-green tint
+      const gr=R*0.64;
+      const gg=c.createRadialGradient(p.x-gr*0.34,p.y-gr*0.4,gr*0.08,p.x,p.y,gr);
+      gg.addColorStop(0,'#243a4c'); gg.addColorStop(.34,'#0f1c28'); gg.addColorStop(.7,'#070d14'); gg.addColorStop(1,'#02040a');
+      c.beginPath(); c.arc(p.x,p.y,gr,0,TAU); c.fillStyle=gg; c.fill();
+      // faint aperture ring
+      c.lineWidth=Math.max(.5,R*0.022); c.strokeStyle='rgba(96,132,164,.16)';
+      c.beginPath(); c.arc(p.x,p.y,gr*0.58,0,TAU); c.stroke();
+      // small soft specular highlight (top-left)
+      const hg=c.createRadialGradient(p.x-gr*0.36,p.y-gr*0.4,0,p.x-gr*0.36,p.y-gr*0.4,gr*0.55);
+      hg.addColorStop(0,'rgba(210,228,245,.5)'); hg.addColorStop(1,'rgba(210,228,245,0)');
+      c.beginPath(); c.arc(p.x-gr*0.34,p.y-gr*0.36,gr*0.55,0,TAU); c.fillStyle=hg; c.fill();
+    }else if(L.type==='flash'){
+      const fg=c.createRadialGradient(p.x-R*0.3,p.y-R*0.35,R*0.1,p.x,p.y,R);
+      fg.addColorStop(0,'#fdf9ef'); fg.addColorStop(.65,'#e7dfce'); fg.addColorStop(1,'#b7ae9d');
+      c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle=fg; c.fill();
+      c.lineWidth=Math.max(.6,R*0.14); c.strokeStyle='rgba(70,64,52,.35)';
+      c.beginPath(); c.arc(p.x,p.y,R*0.9,0,TAU); c.stroke();
+    }else if(L.type==='lidar'){
+      const lg=c.createRadialGradient(p.x-R*0.3,p.y-R*0.3,R*0.1,p.x,p.y,R);
+      lg.addColorStop(0,'#2d323a'); lg.addColorStop(1,'#090b0e');
+      c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle=lg; c.fill();
+      c.lineWidth=Math.max(.5,R*0.13); c.strokeStyle='rgba(255,255,255,.07)';
+      c.beginPath(); c.arc(p.x,p.y,R*0.88,0,TAU); c.stroke();
+    }else{ // mic
+      c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle='#0a0c10'; c.fill();
+    }
+  });
+}
+function drawAppleMark(c,map,s){
+  if(!state.zones.back.apple) return;
+  const p=map(APPLE.x,APPLE.y);
+  c.save();
+  c.globalAlpha=.5; c.fillStyle='rgba(255,255,255,.4)';
+  c.beginPath(); c.arc(p.x,p.y,APPLE.r*s*0.5,0,Math.PI*2); c.fill();
+  c.restore();
+}
+
+function drawGuides(c,zoneKey,map,s){
+  // bleed (outer, amber dashed) — only meaningful conceptually; drawn slightly outside zone
+  c.save();
+  c.lineWidth=1.25; c.setLineDash([5,4]);
+  c.strokeStyle='rgba(255,138,76,.55)';
+  const b=state.bleed;
+  if(b>0){
+    // approximate outward offset by drawing an inflated rounded rect (camera only, simple)
+    const z=zoneKey==='camera'?geoCam():geoBack();
+    c.beginPath(); roundRectPath(c,z.x-b,z.y-b,z.w+2*b,z.h+2*b,z.r+b,map,s); c.stroke();
+  }
+  c.restore();
+}
+function drawZoneOutline(c,zoneKey,map,s){
+  c.save();
+  c.lineWidth=1.6; c.setLineDash([]);
+  c.strokeStyle=state.clip?'rgba(74,134,255,.9)':'rgba(74,134,255,.45)';
+  c.beginPath(); zonePath(c,zoneKey,map,s); c.stroke();
+  c.restore();
+}
+
+/* ---- Artwork bounding box + handles (screen space) ---- */
+function artCorners(zoneKey){
+  const z=state.zones[zoneKey];
+  const img=z.designId?imgCache[z.designId]:null;
+  if(!img) return null;
+  const dispW=zoneDims(zoneKey).w*z.scale;
+  const dispH=dispW*(img.naturalHeight/img.naturalWidth);
+  const hw=dispW/2, hh=dispH/2;
+  const a=z.rot*Math.PI/180, cos=Math.cos(a), sin=Math.sin(a);
+  const cx=z.tx, cy=z.ty;
+  const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([dx,dy])=>{
+    const wx=cx+dx*cos-dy*sin, wy=cy+dx*sin+dy*cos;
+    return w2s(wx,wy);
+  });
+  // rotate handle above top edge midpoint
+  const topMid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+  const upx=Math.sin(a), upy=-Math.cos(a); // outward normal from top edge, in screen space (y down)
+  const rotH={x:topMid.x+upx*26, y:topMid.y+upy*26};
+  return {pts,topMid,rotH};
+}
+function drawHandles(c){
+  const z=state.zones[state.activeZone];
+  if(!z.designId) return;
+  const info=artCorners(state.activeZone);
+  if(!info) return;
+  const {pts,topMid,rotH}=info;
+  c.save();
+  // outline box
+  c.lineWidth=1.4; c.strokeStyle='rgba(74,134,255,.95)'; c.setLineDash([]);
+  c.beginPath(); c.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<4;i++)c.lineTo(pts[i].x,pts[i].y);
+  c.closePath(); c.stroke();
+  // rotate stem
+  c.beginPath(); c.moveTo(topMid.x,topMid.y); c.lineTo(rotH.x,rotH.y); c.stroke();
+  // corner handles
+  pts.forEach(p=>handleDot(c,p.x,p.y,4.5));
+  // rotate handle
+  c.beginPath(); c.arc(rotH.x,rotH.y,5,0,Math.PI*2);
+  c.fillStyle='#fff'; c.fill(); c.lineWidth=1.6; c.strokeStyle='var(--accent)'; c.strokeStyle='#4a86ff'; c.stroke();
+  c.restore();
+}
+function handleDot(c,x,y,r){
+  c.beginPath(); c.rect(x-r,y-r,r*2,r*2);
+  c.fillStyle='#fff'; c.fill(); c.lineWidth=1.5; c.strokeStyle='#4a86ff'; c.stroke();
+}
+
+/* ============================================================
+   6. POINTER INTERACTION (drag / scale / rotate)
+   ============================================================ */
+let drag=null; // {mode,startWorld,startState,center,startDist,startAng}
+function hitTest(sx,sy){
+  const z=state.zones[state.activeZone];
+  if(!z.designId) return null;
+  const info=artCorners(state.activeZone);
+  if(!info) return null;
+  const {pts,rotH}=info;
+  const near=(p)=>Math.hypot(p.x-sx,p.y-sy)<=13;
+  if(near(rotH)) return {mode:'rotate'};
+  for(let i=0;i<4;i++){ if(near(pts[i])) return {mode:'scale',corner:i}; }
+  // inside polygon?
+  if(pointInPoly(sx,sy,pts)) return {mode:'move'};
+  return null;
+}
+function pointInPoly(x,y,poly){
+  let inside=false;
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const xi=poly[i].x,yi=poly[i].y,xj=poly[j].x,yj=poly[j].y;
+    if(((yi>y)!==(yj>y)) && (x<(xj-xi)*(y-yi)/(yj-yi)+xi)) inside=!inside;
+  }
+  return inside;
+}
+function getPos(e){
+  const r=stage.getBoundingClientRect();
+  const p=(e.touches&&e.touches[0])||e;
+  return{x:p.clientX-r.left, y:p.clientY-r.top};
+}
+function onDown(e){
+  const pos=getPos(e);
+  const z=state.zones[state.activeZone];
+  const hit=hitTest(pos.x,pos.y);
+  if(!hit) return;
+  e.preventDefault();
+  const center=w2s(z.tx,z.ty);
+  drag={mode:hit.mode, corner:hit.corner, undoPushed:false,
+        startPos:pos, startState:{tx:z.tx,ty:z.ty,scale:z.scale,rot:z.rot},
+        startDist:Math.hypot(pos.x-center.x,pos.y-center.y),
+        startAng:Math.atan2(pos.y-center.y,pos.x-center.x)};
+  stage.style.cursor= hit.mode==='move'?'grabbing':(hit.mode==='rotate'?'grabbing':'nwse-resize');
+  window.addEventListener('pointermove',onMove);
+  window.addEventListener('pointerup',onUp);
+}
+function onMove(e){
+  if(!drag) return;
+  const pos=getPos(e);
+  const z=state.zones[state.activeZone];
+  if(!drag.undoPushed){ drag.undoPushed=true; pushUndo(); } // snapshot on first real move
+  if(drag.mode==='move'){
+    const a=s2w(drag.startPos.x,drag.startPos.y), b=s2w(pos.x,pos.y);
+    z.tx=drag.startState.tx+(b.x-a.x);
+    z.ty=drag.startState.ty+(b.y-a.y);
+  }else if(drag.mode==='scale'){
+    const center=w2s(z.tx,z.ty);
+    const d=Math.hypot(pos.x-center.x,pos.y-center.y);
+    let ns=drag.startState.scale*(d/(drag.startDist||1));
+    z.scale=clamp(ns,0.1,5);
+    syncScaleUI();
+  }else if(drag.mode==='rotate'){
+    const center=w2s(z.tx,z.ty);
+    const ang=Math.atan2(pos.y-center.y,pos.x-center.x);
+    let deg=drag.startState.rot+(ang-drag.startAng)*180/Math.PI;
+    deg=((deg+180)%360+360)%360-180;
+    if(e.shiftKey===false && Math.abs(((deg%15)+15)%15)<2.5) deg=Math.round(deg/15)*15; // gentle 15° snap
+    z.rot=deg; syncRotUI();
+  }
+  draw();
+}
+function onUp(){
+  drag=null; stage.style.cursor='default';
+  window.removeEventListener('pointermove',onMove);
+  window.removeEventListener('pointerup',onUp);
+  save();
+}
+function onHover(e){
+  if(drag) return;
+  const pos=getPos(e);
+  const hit=hitTest(pos.x,pos.y);
+  stage.style.cursor= !hit?'default': hit.mode==='move'?'grab': hit.mode==='rotate'?'grab':'nwse-resize';
+}
+
+/* wheel zoom */
+stage.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const dir=e.deltaY<0?1.08:0.925;
+  setZoom(state.zoom*dir);
+},{passive:false});
+
+stage.addEventListener('pointerdown',onDown);
+stage.addEventListener('pointermove',onHover);
+
+/* ============================================================
+   7. UI WIRING
+   ============================================================ */
+const $=id=>document.getElementById(id);
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+/* zone tabs */
+document.querySelectorAll('.zone-tabs button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    state.activeZone=b.dataset.zone;
+    document.querySelectorAll('.zone-tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+    syncZoneUI(); draw(); save();
+  });
+});
+
+/* scale + rotate sliders */
+let sliderUndone=false;
+function sliderStart(){ if(!sliderUndone){ sliderUndone=true; pushUndo(); } }
+function sliderEnd(){ sliderUndone=false; save(); }
+$('scale').addEventListener('input',e=>{
+  sliderStart();
+  const z=state.zones[state.activeZone];
+  z.scale=(+e.target.value)/100; syncScaleUI(); draw();
+});
+$('scale').addEventListener('change',sliderEnd);
+$('rotate').addEventListener('input',e=>{
+  sliderStart();
+  const z=state.zones[state.activeZone]; z.rot=+e.target.value; syncRotUI(); draw();
+});
+$('rotate').addEventListener('change',sliderEnd);
+
+function syncScaleUI(){
+  const z=state.zones[state.activeZone];
+  $('scale').value=Math.round(clamp(z.scale*100,10,500));
+  $('scaleVal').textContent=Math.round(z.scale*100)+'%';
+}
+function syncRotUI(){
+  const z=state.zones[state.activeZone];
+  $('rotate').value=Math.round(z.rot);
+  $('rotVal').textContent=Math.round(z.rot)+'°';
+}
+
+/* placement buttons */
+$('fitBtn').addEventListener('click',()=>{pushUndo();placeArt('fit');});
+$('fillBtn').addEventListener('click',()=>{pushUndo();placeArt('fill');});
+$('centerBtn').addEventListener('click',()=>{pushUndo();const z=state.zones[state.activeZone];const c=zoneCenter(state.activeZone);z.tx=c.x;z.ty=c.y;draw();save();});
+$('resetBtn').addEventListener('click',()=>{pushUndo();placeArt('fit');const z=state.zones[state.activeZone];z.rot=0;syncRotUI();draw();save();});
+
+function placeArt(mode){
+  const zoneKey=state.activeZone, z=state.zones[zoneKey];
+  const img=z.designId?imgCache[z.designId]:null;
+  const c=zoneCenter(zoneKey);
+  z.tx=c.x; z.ty=c.y;
+  if(img){
+    const zd=zoneDims(zoneKey);
+    const ar=img.naturalHeight/img.naturalWidth;    // design h/w
+    const zar=zd.h/zd.w;                             // zone h/w
+    // scale is measured as (art width / zone width)
+    if(mode==='fill'){ z.scale = ar<zar ? (zd.h/(zd.w*ar)) : 1; }
+    else { z.scale = ar>zar ? (zd.h/(zd.w*ar)) : 1; } // fit/contain
+  }
+  syncScaleUI(); draw();
+}
+
+/* die-cut / cutout / guide toggles */
+$('clipTog').addEventListener('change',e=>{state.clip=e.target.checked;draw();save();});
+$('cutoutTog').addEventListener('change',e=>{
+  if(state.activeZone==='camera') state.zones.camera.cutouts=e.target.checked;
+  else state.zones.back.apple=e.target.checked;
+  draw();save();
+});
+$('guideTog').addEventListener('change',e=>{state.guides=e.target.checked;draw();save();});
+
+/* dpi + bleed segs */
+$('dpiSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  state.dpi=+b.dataset.dpi;[...$('dpiSeg').children].forEach(x=>x.classList.toggle('on',x===b));updateReadout();save();});
+$('bleedSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+  state.bleed=+b.dataset.bleed;[...$('bleedSeg').children].forEach(x=>x.classList.toggle('on',x===b));
+  $('bleedOut').textContent=state.bleed+' mm';draw();updateReadout();save();});
+
+/* zoom controls */
+function setZoom(z){state.zoom=clamp(z,0.4,4);computeView();$('zoomVal').textContent=Math.round(state.zoom*100)+'%';draw();}
+$('zoomIn').addEventListener('click',()=>setZoom(state.zoom*1.15));
+$('zoomOut').addEventListener('click',()=>setZoom(state.zoom/1.15));
+$('zoomFit').addEventListener('click',()=>setZoom(1));
+
+/* finishes */
+function buildFinishes(){
+  const row=$('finishRow');
+  FINISHES.forEach(f=>{
+    const b=document.createElement('button');
+    b.className='sw'+(f.id===state.finish?' active':'');
+    b.style.background=f.body; b.title=f.name; b.dataset.id=f.id;
+    b.addEventListener('click',()=>{pushUndo();state.finish=f.id;
+      [...row.querySelectorAll('.sw')].forEach(x=>x.classList.toggle('active',x.dataset.id===f.id));
+      draw();save();});
+    row.appendChild(b);
+  });
+}
+
+/* backing colours */
+function buildBgSwatches(){
+  const wrap=$('bgSwatches'); wrap.innerHTML='';
+  const none=document.createElement('button');
+  none.className='cswatch none'; none.title='None';
+  none.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l16 16M20 4L4 20"/></svg>';
+  none.addEventListener('click',()=>{pushUndo();state.zones[state.activeZone].bg=null;syncBgUI();draw();save();});
+  wrap.appendChild(none);
+  BG_COLORS.forEach(col=>{
+    const b=document.createElement('button');
+    b.className='cswatch'; b.style.background=col; b.dataset.col=col;
+    b.addEventListener('click',()=>{pushUndo();state.zones[state.activeZone].bg=col;syncBgUI();draw();save();});
+    wrap.appendChild(b);
+  });
+  // custom picker
+  const pick=document.createElement('label'); pick.className='cpick'; pick.title='Custom';
+  const inp=document.createElement('input'); inp.type='color'; inp.value='#3366ff';
+  let pickUndone=false;
+  inp.addEventListener('input',()=>{if(!pickUndone){pickUndone=true;pushUndo();}state.zones[state.activeZone].bg=inp.value;syncBgUI();draw();});
+  inp.addEventListener('change',()=>{pickUndone=false;save();});
+  pick.appendChild(inp); wrap.appendChild(pick);
+}
+function syncBgUI(){
+  const z=state.zones[state.activeZone];
+  $('bgSwatches').querySelectorAll('.cswatch').forEach(sw=>{
+    sw.classList.toggle('active', sw.dataset.col && sw.dataset.col.toLowerCase()===(z.bg||'').toLowerCase());
+  });
+  $('bgSwatches').querySelector('.cswatch.none').classList.toggle('active',!z.bg);
+}
+
+/* editable exact dimensions (per active zone) */
+const DIM_FIELDS={
+  camera:[['camW','w'],['camH','h'],['camR','r'],['camTop','top']],
+  back:[['backW','w'],['backH','h'],['backR','r'],['backTop','top']]
+};
+function buildDimFields(){
+  const wrap=$('dimGrid'); if(!wrap) return;
+  const zoneKey=state.activeZone, defs=DIM_FIELDS[zoneKey];
+  wrap.innerHTML='';
+  defs.forEach(([key,lblKey])=>{
+    const d=document.createElement('div'); d.className='dim';
+    const lab=document.createElement('label'); lab.textContent=t('dim_'+lblKey);
+    const inp=document.createElement('div'); inp.className='inp';
+    const field=document.createElement('input');
+    field.type='number'; field.step='0.5'; field.min='1'; field.value=state.geo[key];
+    field.setAttribute('aria-label',t('dim_'+lblKey)+' (mm)');
+    const u=document.createElement('span'); u.className='u'; u.textContent='mm';
+    field.addEventListener('focus',pushUndo);
+    field.addEventListener('input',()=>{
+      let v=parseFloat(field.value); if(!isFinite(v))return;
+      v=clamp(v,1,zoneKey==='back'?200:80);
+      state.geo[key]=v; draw(); updateReadout();
+    });
+    field.addEventListener('change',save);
+    inp.appendChild(field); inp.appendChild(u);
+    d.appendChild(lab); d.appendChild(inp); wrap.appendChild(d);
+  });
+}
+$('geoReset').addEventListener('click',()=>{
+  pushUndo();
+  DIM_FIELDS[state.activeZone].forEach(([key])=>{ state.geo[key]=GEO_DEFAULT[key]; });
+  buildDimFields(); draw(); updateReadout(); save();
+});
+
+/* ============================================================
+   8. DESIGNS: upload / gallery
+   ============================================================ */
+let idSeq=1;
+function addDesign(src,name,isSample,fixedId){
+  return new Promise(res=>{
+    if(fixedId && state.designs.some(d=>d.id===fixedId)){ res(state.designs.find(d=>d.id===fixedId)); return; }
+    const img=new Image();
+    img.onload=()=>{
+      const id=fixedId||('d'+(idSeq++));
+      imgCache[id]=img;
+      const d={id,name:name||('Design '+id.slice(1)),src,sample:!!isSample};
+      state.designs.push(d);
+      buildGallery();
+      res(d);
+    };
+    img.onerror=()=>res(null);
+    img.src=src;
+  });
+}
+function assignDesign(id){
+  pushUndo();
+  const z=state.zones[state.activeZone];
+  z.designId=id; z.rot=0;
+  placeArt('fill');
+  buildGallery(); draw(); save();
+  showHint(t('hintPlace'));
+}
+function removeDesign(id){
+  state.designs=state.designs.filter(d=>d.id!==id);
+  delete imgCache[id];
+  ['camera','back'].forEach(k=>{if(state.zones[k].designId===id)state.zones[k].designId=null;});
+  buildGallery(); draw(); save();
+}
+function buildGallery(){
+  const g=$('gallery');
+  const uploads=state.designs.filter(d=>!d.sample);
+  g.innerHTML='';
+  if(!uploads.length){
+    g.innerHTML='<div class="empty" style="grid-column:1/-1">'+t('emptyGallery')+'</div>';
+  }
+  uploads.forEach(d=>g.appendChild(thumbEl(d)));
+  // samples
+  const sg=$('sampleGallery'); sg.innerHTML='';
+  state.designs.filter(d=>d.sample).forEach(d=>sg.appendChild(thumbEl(d)));
+}
+function thumbEl(d){
+  const el=document.createElement('div');
+  el.className='thumb'+(state.zones[state.activeZone].designId===d.id?' active':'')+(d.sample?' sample':'');
+  el.setAttribute('role','button'); el.setAttribute('tabindex','0');
+  el.setAttribute('aria-label','Use design '+d.name);
+  el.addEventListener('keydown',ev=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();assignDesign(d.id);}});
+  el.innerHTML='<img src="'+d.src+'" alt="'+escapeHtml(d.name)+'"><span class="tag">'+escapeHtml(d.name)+'</span>';
+  if(!d.sample){
+    const del=document.createElement('button'); del.className='del'; del.title='Delete';
+    del.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 5l14 14M19 5L5 19"/></svg>';
+    del.addEventListener('click',ev=>{ev.stopPropagation();removeDesign(d.id);});
+    el.appendChild(del);
+  }
+  el.addEventListener('click',()=>assignDesign(d.id));
+  return el;
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* upload sources */
+const fileInput=$('fileInput');
+$('drop').setAttribute('role','button');
+$('drop').setAttribute('tabindex','0');
+$('drop').setAttribute('aria-label','Upload a design image');
+$('drop').addEventListener('click',()=>fileInput.click());
+$('drop').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click();}});
+fileInput.addEventListener('change',e=>{handleFiles(e.target.files);fileInput.value='';});
+function handleFiles(files){
+  const arr=[...files].filter(f=>/^image\//.test(f.type));
+  let first=true;
+  arr.forEach(f=>{
+    const rd=new FileReader();
+    rd.onload=async()=>{
+      const d=await addDesign(rd.result,f.name.replace(/\.[^.]+$/,''),false);
+      if(d && first){first=false;assignDesign(d.id);toast(t('tAdded'));}
+    };
+    rd.readAsDataURL(f);
+  });
+}
+// drag & drop
+const drop=$('drop'), sw=document.querySelector('.stage-wrap');
+[drop,sw].forEach(el=>{
+  el.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('hot');});
+  el.addEventListener('dragleave',()=>drop.classList.remove('hot'));
+  el.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');handleFiles(e.dataTransfer.files);});
+});
+// paste
+window.addEventListener('paste',e=>{
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(const it of items){ if(it.type.indexOf('image')===0){ const f=it.getAsFile(); if(f)handleFiles([f]); } }
+});
+
+/* ============================================================
+   9. EXPORT
+   ============================================================ */
+function download(canvas,filename){
+  canvas.toBlob(blob=>{
+    if(!blob){ try{ window.open(canvas.toDataURL('image/png'),'_blank'); }catch(e){} return; }
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=filename;
+    a.rel='noopener'; document.body.appendChild(a); a.click();
+    setTimeout(()=>{a.remove();URL.revokeObjectURL(url);},6000);
+  },'image/png');
+}
+/* Print file: the WHOLE printed image for the ACTIVE zone at target DPI (+bleed).
+   No die-cut clip, no lens holes — the cutting machine makes those. */
+function makePrintCanvas(zoneKey){
+  const z=state.zones[zoneKey];
+  if(!z.designId && !z.bg) return null;
+  const d=zoneDims(zoneKey), bleed=state.bleed;
+  const totalW=d.w+bleed*2, totalH=d.h+bleed*2, pxPerMM=state.dpi/25.4;
+  const W=Math.round(totalW*pxPerMM), H=Math.round(totalH*pxPerMM);
+  const map=(x,y)=>({x:(x-(d.x-bleed))*pxPerMM, y:(y-(d.y-bleed))*pxPerMM});
+  // Die-cut to the island SHAPE, but NO lens holes — the machine cuts the lenses.
+  const layer=renderSticker(zoneKey,{W,H,map,s:pxPerMM,clipShape:true,holes:false});
+  const out=document.createElement('canvas'); out.width=W; out.height=H;
+  const oc=out.getContext('2d'); if(layer) oc.drawImage(layer,0,0);
+  return {canvas:out, name:'iphone17promax-'+zoneKey+'-print-'+d.w.toFixed(0)+'x'+d.h.toFixed(0)+'mm-'+state.dpi+'dpi.png'};
+}
+$('exportPrint').addEventListener('click',()=>{
+  const r=makePrintCanvas(state.activeZone);
+  if(!r){ toast(t('tNoArt')); return; }
+  download(r.canvas,r.name); toast(t('tPrint'));
+});
+/* Mockup: full phone render at high-res, no handles/guides. */
+$('exportMock').addEventListener('click',()=>{
+  const scale=1400/PHONE.w;            // ~1400px wide phone
+  const pad=90;
+  const W=Math.round(PHONE.w*scale+pad*2), H=Math.round(PHONE.h*scale+pad*2);
+  const out=document.createElement('canvas'); out.width=W; out.height=H;
+  const c=out.getContext('2d');
+  const F=FINISHES.find(f=>f.id===state.finish)||FINISHES[0];
+  const map=(x,y)=>({x:pad+x*scale, y:pad+y*scale});
+  const s=scale;
+  // transparent background (PNG)
+  // body
+  c.save(); c.shadowColor='rgba(0,0,0,.35)'; c.shadowBlur=60; c.shadowOffsetY=40;
+  c.fillStyle=F.body; c.beginPath(); roundRectPath(c,0,0,PHONE.w,PHONE.h,PHONE.r,map,s); c.fill(); c.restore();
+  const g=c.createLinearGradient(map(0,0).x,map(0,0).y,map(PHONE.w,PHONE.h).x,map(PHONE.w,PHONE.h).y);
+  g.addColorStop(0,'rgba(255,255,255,.10)');g.addColorStop(.5,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(0,0,0,.14)');
+  c.save();c.beginPath();roundRectPath(c,0,0,PHONE.w,PHONE.h,PHONE.r,map,s);c.clip();c.fillStyle=g;c.fillRect(0,0,W,H);c.restore();
+  // back sticker
+  const back=renderSticker('back',{W,H,map,s,clipShape:state.clip,holes:true}); if(back)c.drawImage(back,0,0);
+  // plateau
+  const PL2=geoPlateau();
+  c.save();c.shadowColor='rgba(0,0,0,.3)';c.shadowBlur=18;c.shadowOffsetY=8;
+  c.fillStyle=F.plateau;c.beginPath();roundRectPath(c,PL2.x,PL2.y,PL2.w,PL2.h,PL2.r,map,s);c.fill();c.restore();
+  // camera sticker
+  const cam=renderSticker('camera',{W,H,map,s,clipShape:state.clip,holes:true}); if(cam)c.drawImage(cam,0,0);
+  // hardware + apple
+  if(lensesVisible()) drawLenses(c,map,s);
+  if(state.zones.back.apple) drawAppleMark(c,map,s);
+  download(out,'iphone17promax-mockup-'+state.finish+'.png');
+  toast(t('tMock'));
+});
+
+/* ============================================================
+   10. READOUT
+   ============================================================ */
+function updateReadout(){
+  const zoneKey=state.activeZone, d=zoneDims(zoneKey);
+  const bleed=state.bleed;
+  const totalW=(d.w+bleed*2), totalH=(d.h+bleed*2);
+  const pxPerMM=state.dpi/25.4;
+  const W=Math.round(totalW*pxPerMM), H=Math.round(totalH*pxPerMM);
+  $('dpiOut').textContent=state.dpi+' DPI';
+  $('zoneDimBadge').textContent=d.w.toFixed(0)+' × '+d.h.toFixed(0)+' mm';
+  $('readout').innerHTML=
+    '<div class="row"><span>'+t('rTrim')+'</span><b>'+d.w.toFixed(1)+' × '+d.h.toFixed(1)+' mm</b></div>'+
+    '<div class="row"><span>'+t('rBleed')+'</span><b>'+totalW.toFixed(1)+' × '+totalH.toFixed(1)+' <span class="u">mm</span></b></div>'+
+    '<div class="row"><span>'+t('rPixels')+'</span><b>'+W+' × '+H+' px</b></div>';
+}
+
+/* ============================================================
+   11. UNDO / REDO
+   ============================================================ */
+const undoStack=[],redoStack=[];
+function snapshot(){return JSON.stringify({zones:state.zones,finish:state.finish,geo:state.geo});}
+function sanitizeZones(){['camera','back'].forEach(k=>{const z=state.zones[k]; if(z&&z.designId&&!imgCache[z.designId])z.designId=null;});}
+function pushUndo(){const s=snapshot();if(undoStack.length&&undoStack[undoStack.length-1]===s)return;undoStack.push(s);if(undoStack.length>60)undoStack.shift();redoStack.length=0;syncUndoUI();}
+function applySnapshot(s){const o=JSON.parse(s);state.zones=o.zones;state.finish=o.finish;
+  if(o.geo)state.geo=o.geo;
+  sanitizeZones();
+  syncZoneUI();buildFinishesActive();draw();save();}
+function buildFinishesActive(){[...$('finishRow').querySelectorAll('.sw')].forEach(x=>x.classList.toggle('active',x.dataset.id===state.finish));}
+$('undoBtn').addEventListener('click',doUndo);
+$('redoBtn').addEventListener('click',doRedo);
+function doUndo(){if(!undoStack.length)return;redoStack.push(snapshot());applySnapshot(undoStack.pop());syncUndoUI();}
+function doRedo(){if(!redoStack.length)return;undoStack.push(snapshot());applySnapshot(redoStack.pop());syncUndoUI();}
+function syncUndoUI(){$('undoBtn').disabled=!undoStack.length;$('redoBtn').disabled=!redoStack.length;}
+
+/* ============================================================
+   12. KEYBOARD
+   ============================================================ */
+window.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea') return;
+  const z=state.zones[state.activeZone];
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?doRedo():doUndo();return;}
+  if((e.key==='Delete'||e.key==='Backspace')&&z.designId){e.preventDefault();pushUndo();z.designId=null;z.bg=null;buildGallery();draw();save();toast(t('tRemoved'));return;}
+  if(z.designId){
+    const step=e.shiftKey?2:0.5;
+    let dx=0,dy=0;
+    if(e.key==='ArrowLeft')dx=-step; else if(e.key==='ArrowRight')dx=step;
+    else if(e.key==='ArrowUp')dy=-step; else if(e.key==='ArrowDown')dy=step;
+    if(dx||dy){ e.preventDefault(); pushUndo(); z.tx+=dx; z.ty+=dy; draw(); save(); }
+  }
+});
+
+/* ============================================================
+   13. LANG / THEME / HELP / TOAST
+   ============================================================ */
+function applyLang(){
+  const dict=I18N[state.lang];
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(dict[k]!=null)el.textContent=dict[k];});
+  document.documentElement.setAttribute('lang',state.lang);
+  document.documentElement.setAttribute('dir',state.lang==='ar'?'rtl':'ltr');
+  $('langLabel').textContent=state.lang==='en'?'عربي':'EN';
+  // cutout row label depends on zone; refresh
+  syncZoneUI(); updateReadout(); buildGallery();
+}
+$('langBtn').addEventListener('click',()=>{state.lang=state.lang==='en'?'ar':'en';applyLang();save();});
+
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',state.theme||'dark');
+  $('themeIcon').innerHTML = (state.theme==='light')
+    ? '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+    : '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+  draw();
+}
+$('themeBtn').addEventListener('click',()=>{state.theme=(state.theme==='light')?'dark':'light';applyTheme();save();});
+
+$('helpBtn').addEventListener('click',()=>$('helpBg').classList.add('show'));
+$('helpClose').addEventListener('click',()=>$('helpBg').classList.remove('show'));
+$('helpBg').addEventListener('click',e=>{if(e.target===$('helpBg'))$('helpBg').classList.remove('show');});
+
+let toastT=null;
+function toast(msg){$('toastMsg').textContent=msg;$('toast').classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>$('toast').classList.remove('show'),2200);}
+let hintT=null;
+function showHint(msg){$('hint').textContent=msg;$('hint').classList.add('show');
+  clearTimeout(hintT);hintT=setTimeout(()=>$('hint').classList.remove('show'),2600);}
+
+/* ============================================================
+   14. ZONE UI SYNC
+   ============================================================ */
+function syncZoneUI(){
+  const zoneKey=state.activeZone, z=state.zones[zoneKey];
+  syncScaleUI(); syncRotUI(); syncBgUI(); buildDimFields();
+  $('clipTog').checked=state.clip;
+  // cutout toggle repurposed per zone
+  if(zoneKey==='camera'){
+    $('cutoutLabel').textContent=t('lensCut'); $('cutoutSub').textContent=t('lensCutSub');
+    $('cutoutTog').checked=!!z.cutouts; $('cutoutRow').style.display='';
+  }else{
+    $('cutoutLabel').textContent=t('appleCut'); $('cutoutSub').textContent=t('appleCutSub');
+    $('cutoutTog').checked=!!z.apple; $('cutoutRow').style.display='';
+  }
+  updateReadout();
+  // gallery active states
+  document.querySelectorAll('#gallery .thumb,#sampleGallery .thumb').forEach(()=>{});
+  buildGallery();
+  // hint if empty
+  if(!z.designId && !z.bg) showHint(t('hintEmpty'));
+}
+
+/* ============================================================
+   15. PERSISTENCE
+   ============================================================ */
+const LS='stickerStudio.v1';
+let saveT=null;
+function save(){
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{
+      const data={
+        activeZone:state.activeZone,lang:state.lang,theme:state.theme,finish:state.finish,
+        dpi:state.dpi,bleed:state.bleed,clip:state.clip,guides:state.guides,zoom:state.zoom,
+        geo:state.geo, geoV:2,
+        zones:state.zones,
+        designs:state.designs.map(d=>({id:d.id,name:d.name,src:d.src,sample:d.sample})),
+        idSeq
+      };
+      localStorage.setItem(LS,JSON.stringify(data));
+    }catch(err){/* quota / private mode: ignore */}
+  },250);
+}
+function load(){
+  let data=null;
+  try{data=JSON.parse(localStorage.getItem(LS));}catch(e){}
+  if(!data) return false;
+  Object.assign(state,{activeZone:data.activeZone||'camera',lang:data.lang||'en',theme:data.theme||'dark',
+    finish:data.finish||'orange',dpi:data.dpi||300,bleed:data.bleed==null?0:data.bleed,
+    clip:data.clip!==false,guides:data.guides!==false,zoom:data.zoom||1});
+  // Only restore saved sizes from the current geometry version; older cached
+  // sessions used a shorter island, so fall back to the corrected defaults.
+  if(data.geo && data.geoV===2) state.geo=Object.assign({},GEO_DEFAULT,data.geo);
+  else state.geo=Object.assign({},GEO_DEFAULT);
+  if(data.zones)state.zones=data.zones;
+  if(!state.zones.camera)state.zones.camera=freshZone();
+  if(!state.zones.back)state.zones.back=freshZone();
+  idSeq=data.idSeq||idSeq;
+  return data.designs||[];
+}
+
+/* ============================================================
+   16. INIT
+   ============================================================ */
+async function init(){
+  buildFinishes();
+  buildBgSwatches();
+
+  const savedDesigns=load();
+
+  // theme default: honour saved, else follow OS
+  if(!state.theme){state.theme=window.matchMedia&&window.matchMedia('(prefers-color-scheme:light)').matches?'light':'dark';}
+  applyTheme();
+
+  // segments reflect state
+  [...$('dpiSeg').children].forEach(x=>x.classList.toggle('on',+x.dataset.dpi===state.dpi));
+  [...$('bleedSeg').children].forEach(x=>x.classList.toggle('on',+x.dataset.bleed===state.bleed));
+  $('bleedOut').textContent=state.bleed+' mm';
+  $('zoomVal').textContent=Math.round(state.zoom*100)+'%';
+  document.querySelectorAll('.zone-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.zone===state.activeZone));
+
+  // load samples (always available, stable ids so zone assignments survive reload)
+  for(let i=0;i<SAMPLES.length;i++){ await addDesign(SAMPLES[i].src,SAMPLES[i].name,true,'sample-'+i); }
+  // restore uploaded designs
+  if(savedDesigns&&savedDesigns.length){
+    for(const d of savedDesigns.filter(x=>!x.sample)){
+      await new Promise(res=>{const img=new Image();img.onload=()=>{imgCache[d.id]=img;state.designs.push(d);res();};img.onerror=res;img.src=d.src;});
+    }
+  }
+  sanitizeZones();
+  buildFinishesActive();
+  applyLang();     // also builds gallery + zone UI
+  buildGallery();
+  syncZoneUI();
+
+  resize();
+  window.addEventListener('resize',resize);
+  // observe container size (rail collapse etc.)
+  if(window.ResizeObserver){new ResizeObserver(resize).observe(stage.parentElement);}
+
+  if(!localStorage.getItem(LS+'.seen')){setTimeout(()=>$('helpBg').classList.add('show'),400);localStorage.setItem(LS+'.seen','1');}
+}
+init();
+
+})();
+</script>
+</body>
+</html>
