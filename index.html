@@ -441,16 +441,16 @@
           <div class="swatch-line" id="bgSwatches"></div>
         </div>
 
-        <div class="toggle-row">
-          <div class="cap"><span data-i18n="dieCut">Die-cut to shape</span><small data-i18n="dieCutSub">Trim artwork to the sticker outline</small></div>
-          <label class="switch"><input type="checkbox" id="clipTog" checked><span class="track"></span><span class="knob"></span></label>
-        </div>
         <div class="toggle-row" id="cutoutRow">
-          <div class="cap"><span id="cutoutLabel" data-i18n="lensCut">Lens cut-outs</span><small id="cutoutSub" data-i18n="lensCutSub">Holes for cameras, flash & sensors</small></div>
+          <div class="cap"><span id="cutoutLabel" data-i18n="lensCut">Show lenses</span><small id="cutoutSub" data-i18n="lensCutSub">Cameras, flash & sensors — preview only</small></div>
           <label class="switch"><input type="checkbox" id="cutoutTog" checked><span class="track"></span><span class="knob"></span></label>
         </div>
+        <div class="field" id="lensOpacityRow">
+          <label><span data-i18n="lensOpacity">Lens opacity</span><span class="val" id="lensOpacityVal">100%</span></label>
+          <input type="range" id="lensOpacity" min="0" max="100" value="100">
+        </div>
         <div class="toggle-row">
-          <div class="cap"><span data-i18n="guides">Show cut & bleed guides</span><small data-i18n="guidesSub">On-screen only, never exported</small></div>
+          <div class="cap"><span data-i18n="guides">Show cut &amp; bleed guides</span><small data-i18n="guidesSub">On-screen only, never exported</small></div>
           <label class="switch"><input type="checkbox" id="guideTog" checked><span class="track"></span><span class="knob"></span></label>
         </div>
       </div>
@@ -582,9 +582,10 @@ const state={
   finish:'orange',
   dpi:300,
   bleed:0,
-  clip:true,
+  clip:true,          // sticker is always die-cut to the island shape
   cutouts:true,
   guides:true,
+  lensOpacity:1,      // preview-only lens visibility (0–1)
   zoom:1,
   geo:Object.assign({},GEO_DEFAULT),
   designs:[],
@@ -606,8 +607,8 @@ const I18N={
     samples:"Quick samples", transform:"Placement", scale:"Size", rotate:"Rotation",
     fit:"Fit", fill:"Fill", center:"Center", reset:"Reset",
     stickerOpts:"Sticker options", bg:"Backing color",
-    dieCut:"Die-cut to shape", dieCutSub:"Trims the sticker & print file to the island outline",
-    lensCut:"Show lens holes", lensCutSub:"Preview only — the machine cuts these",
+    lensCut:"Show lenses", lensCutSub:"Cameras, flash & sensors — preview only",
+    lensOpacity:"Lens opacity",
     appleCut:"Show logo hole", appleCutSub:"Preview only — leave the logo area clear",
     guides:"Show cut & bleed guides", guidesSub:"On-screen only, never exported",
     exactSize:"Exact size (mm)", resetDefault:"Reset",
@@ -638,8 +639,8 @@ const I18N={
     samples:"عينات سريعة", transform:"الموضع", scale:"الحجم", rotate:"التدوير",
     fit:"احتواء", fill:"ملء", center:"توسيط", reset:"إعادة",
     stickerOpts:"خيارات الاستكر", bg:"لون الخلفية",
-    dieCut:"قص حسب الشكل", dieCutSub:"يقص الاستكر وملف الطباعة على حدود الجزيرة",
-    lensCut:"إظهار فتحات العدسات", lensCutSub:"للمعاينة فقط — الماكينة هي التي تقصّها",
+    lensCut:"إظهار العدسات", lensCutSub:"الكاميرات والفلاش والحساسات — للمعاينة فقط",
+    lensOpacity:"شفافية العدسات",
     appleCut:"إظهار فتحة الشعار", appleCutSub:"للمعاينة فقط — اترك منطقة الشعار فارغة",
     guides:"إظهار خطوط القص والهامش", guidesSub:"على الشاشة فقط، لا تُصدّر",
     exactSize:"المقاس الدقيق (مم)", resetDefault:"إعادة",
@@ -795,13 +796,16 @@ function renderSticker(zoneKey,opts){
   if(holes){
     o.save();
     o.globalCompositeOperation='destination-out';
-    if(zoneKey==='camera' && z.cutouts){
+    const la=opts.lensAlpha==null?1:opts.lensAlpha; // preview lens opacity
+    if(zoneKey==='camera' && z.cutouts && la>0){
+      o.globalAlpha=la;
       lensAbs().forEach(L=>{
         const cc=opts.map(L.x,L.y);
         o.beginPath(); o.arc(cc.x,cc.y,L.r*opts.s,0,Math.PI*2); o.fill();
       });
     }
     if(zoneKey==='back' && z.apple){
+      o.globalAlpha=1;
       const cc=opts.map(APPLE.x,APPLE.y);
       o.beginPath(); o.arc(cc.x,cc.y,APPLE.r*opts.s,0,Math.PI*2); o.fill();
     }
@@ -851,7 +855,7 @@ function draw(){
   ctx.restore();
 
   // ----- BACK sticker (under plateau) -----
-  const backLayer=renderSticker('back',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:state.clip,holes:true});
+  const backLayer=renderSticker('back',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:true,holes:true,lensAlpha:state.lensOpacity});
   // The offscreen uses DPR-scaled px so it aligns after we draw at 1:1 device px.
   if(backLayer) blit(backLayer, state.activeZone==='back'?1:0.92);
 
@@ -876,18 +880,17 @@ function draw(){
   ctx.beginPath(); roundRectPath(ctx,PL.x,PL.y,PL.w,PL.h,PL.r,map,s); ctx.stroke(); ctx.restore();
 
   // ----- CAMERA sticker on plateau -----
-  const camLayer=renderSticker('camera',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:state.clip,holes:true});
+  const camLayer=renderSticker('camera',{W:stage.width,H:stage.height,map:(x,y)=>{const p=w2s(x,y);return{x:p.x*DPR,y:p.y*DPR};},s:s*DPR,clipShape:true,holes:true,lensAlpha:state.lensOpacity});
   if(camLayer) blit(camLayer, state.activeZone==='camera'?1:0.92);
 
   // ----- Camera hardware (lenses) drawn on top so they show through cut-outs -----
-  if(lensesVisible()) drawLenses(ctx,map,s);
+  if(lensesVisible()) drawLenses(ctx,map,s,state.lensOpacity);
 
   // ----- Apple logo emboss on back (if visible & not covered) -----
   if(state.activeZone==='back'){ drawAppleMark(ctx,map,s); }
 
-  // ----- Active-zone guides + outline -----
-  if(state.guides){ drawGuides(ctx,state.activeZone,map,s); }
-  drawZoneOutline(ctx,state.activeZone,map,s);
+  // ----- Active-zone guides + outline (all gated by the guides toggle) -----
+  if(state.guides){ drawGuides(ctx,state.activeZone,map,s); drawZoneOutline(ctx,state.activeZone,map,s); }
 
   // ----- Handles for active artwork -----
   drawHandles(ctx);
@@ -896,9 +899,12 @@ function draw(){
   updateReadout();
 }
 
-function lensesVisible(){const z=state.zones.camera; const has=z.designId||z.bg; return !(has && !z.cutouts);}
-function drawLenses(c,map,s){
+function lensesVisible(){return !!state.zones.camera.cutouts;}
+function drawLenses(c,map,s,alpha){
   const TAU=Math.PI*2;
+  if(alpha==null) alpha=1;
+  if(alpha<=0) return;
+  c.save(); c.globalAlpha=alpha;
   lensAbs().forEach(L=>{
     const p=map(L.x,L.y), R=L.r*s;
     if(L.type==='lens'){
@@ -942,6 +948,7 @@ function drawLenses(c,map,s){
       c.beginPath(); c.arc(p.x,p.y,R,0,TAU); c.fillStyle='#0a0c10'; c.fill();
     }
   });
+  c.restore();
 }
 function drawAppleMark(c,map,s){
   if(!state.zones.back.apple) return;
@@ -968,7 +975,7 @@ function drawGuides(c,zoneKey,map,s){
 function drawZoneOutline(c,zoneKey,map,s){
   c.save();
   c.lineWidth=1.6; c.setLineDash([]);
-  c.strokeStyle=state.clip?'rgba(74,134,255,.9)':'rgba(74,134,255,.45)';
+  c.strokeStyle='rgba(74,134,255,.9)';
   c.beginPath(); zonePath(c,zoneKey,map,s); c.stroke();
   c.restore();
 }
@@ -1177,13 +1184,25 @@ function placeArt(mode){
 }
 
 /* die-cut / cutout / guide toggles */
-$('clipTog').addEventListener('change',e=>{state.clip=e.target.checked;draw();save();});
 $('cutoutTog').addEventListener('change',e=>{
   if(state.activeZone==='camera') state.zones.camera.cutouts=e.target.checked;
   else state.zones.back.apple=e.target.checked;
-  draw();save();
+  syncLensOpacityUI(); draw();save();
 });
+$('lensOpacity').addEventListener('input',e=>{
+  state.lensOpacity=(+e.target.value)/100;
+  $('lensOpacityVal').textContent=Math.round(state.lensOpacity*100)+'%';
+  draw();
+});
+$('lensOpacity').addEventListener('change',save);
 $('guideTog').addEventListener('change',e=>{state.guides=e.target.checked;draw();save();});
+function syncLensOpacityUI(){
+  const cam=state.activeZone==='camera';
+  const row=$('lensOpacityRow');
+  row.style.display = (cam && state.zones.camera.cutouts) ? '' : 'none';
+  $('lensOpacity').value=Math.round(state.lensOpacity*100);
+  $('lensOpacityVal').textContent=Math.round(state.lensOpacity*100)+'%';
+}
 
 /* dpi + bleed segs */
 $('dpiSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
@@ -1423,15 +1442,15 @@ $('exportMock').addEventListener('click',()=>{
   g.addColorStop(0,'rgba(255,255,255,.10)');g.addColorStop(.5,'rgba(255,255,255,0)');g.addColorStop(1,'rgba(0,0,0,.14)');
   c.save();c.beginPath();roundRectPath(c,0,0,PHONE.w,PHONE.h,PHONE.r,map,s);c.clip();c.fillStyle=g;c.fillRect(0,0,W,H);c.restore();
   // back sticker
-  const back=renderSticker('back',{W,H,map,s,clipShape:state.clip,holes:true}); if(back)c.drawImage(back,0,0);
+  const back=renderSticker('back',{W,H,map,s,clipShape:true,holes:true,lensAlpha:1}); if(back)c.drawImage(back,0,0);
   // plateau
   const PL2=geoPlateau();
   c.save();c.shadowColor='rgba(0,0,0,.3)';c.shadowBlur=18;c.shadowOffsetY=8;
   c.fillStyle=F.plateau;c.beginPath();roundRectPath(c,PL2.x,PL2.y,PL2.w,PL2.h,PL2.r,map,s);c.fill();c.restore();
   // camera sticker
-  const cam=renderSticker('camera',{W,H,map,s,clipShape:state.clip,holes:true}); if(cam)c.drawImage(cam,0,0);
+  const cam=renderSticker('camera',{W,H,map,s,clipShape:true,holes:true,lensAlpha:1}); if(cam)c.drawImage(cam,0,0);
   // hardware + apple
-  if(lensesVisible()) drawLenses(c,map,s);
+  if(lensesVisible()) drawLenses(c,map,s,1);
   if(state.zones.back.apple) drawAppleMark(c,map,s);
   download(out,'iphone17promax-mockup-'+state.finish+'.png');
   toast(t('tMock'));
@@ -1530,8 +1549,7 @@ function showHint(msg){$('hint').textContent=msg;$('hint').classList.add('show')
 function syncZoneUI(){
   const zoneKey=state.activeZone, z=state.zones[zoneKey];
   syncScaleUI(); syncRotUI(); syncBgUI(); buildDimFields();
-  $('clipTog').checked=state.clip;
-  // cutout toggle repurposed per zone
+  // cutout toggle repurposed per zone (camera lenses / back logo hole)
   if(zoneKey==='camera'){
     $('cutoutLabel').textContent=t('lensCut'); $('cutoutSub').textContent=t('lensCutSub');
     $('cutoutTog').checked=!!z.cutouts; $('cutoutRow').style.display='';
@@ -1539,6 +1557,8 @@ function syncZoneUI(){
     $('cutoutLabel').textContent=t('appleCut'); $('cutoutSub').textContent=t('appleCutSub');
     $('cutoutTog').checked=!!z.apple; $('cutoutRow').style.display='';
   }
+  syncLensOpacityUI();
+  $('guideTog').checked=state.guides;
   updateReadout();
   // gallery active states
   document.querySelectorAll('#gallery .thumb,#sampleGallery .thumb').forEach(()=>{});
@@ -1558,7 +1578,7 @@ function save(){
     try{
       const data={
         activeZone:state.activeZone,lang:state.lang,theme:state.theme,finish:state.finish,
-        dpi:state.dpi,bleed:state.bleed,clip:state.clip,guides:state.guides,zoom:state.zoom,
+        dpi:state.dpi,bleed:state.bleed,guides:state.guides,zoom:state.zoom,lensOpacity:state.lensOpacity,
         geo:state.geo, geoV:2,
         zones:state.zones,
         designs:state.designs.map(d=>({id:d.id,name:d.name,src:d.src,sample:d.sample})),
@@ -1574,7 +1594,8 @@ function load(){
   if(!data) return false;
   Object.assign(state,{activeZone:data.activeZone||'camera',lang:data.lang||'en',theme:data.theme||'dark',
     finish:data.finish||'orange',dpi:data.dpi||300,bleed:data.bleed==null?0:data.bleed,
-    clip:data.clip!==false,guides:data.guides!==false,zoom:data.zoom||1});
+    clip:true,guides:data.guides!==false,zoom:data.zoom||1,
+    lensOpacity:data.lensOpacity==null?1:data.lensOpacity});
   // Only restore saved sizes from the current geometry version; older cached
   // sessions used a shorter island, so fall back to the corrected defaults.
   if(data.geo && data.geoV===2) state.geo=Object.assign({},GEO_DEFAULT,data.geo);
