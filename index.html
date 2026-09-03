@@ -616,7 +616,7 @@ const I18N={
     exportNote:"Print file = your design die-cut to the island shape, at true size. The machine cuts only the lens holes.",
     dim_w:"Width", dim_h:"Height", dim_r:"Corner", dim_top:"Top gap",
     output:"Export", quality:"Print quality", bleed:"Bleed", bleedNone:"None",
-    dlPrint:"Download print file", dlMock:"Save preview mockup", finish:"Phone",
+    dlPrint:"Download print file", dlPrintBoth:"Download both print files", dlMock:"Save preview mockup", finish:"Phone",
     helpTitle:"How to use",
     helpLede:"Place a customer's design on the exact camera island or back panel of the iPhone 17 Pro Max, then export a print-ready file and a preview.",
     hStep1k:"1 · Upload", hStep1:"Drop, click, or paste the customer's image on the left.",
@@ -629,7 +629,7 @@ const I18N={
     hintPlace:"Drag to move · drag a corner to resize · top handle to rotate",
     hintEmpty:"Upload or pick a design, then drag it onto the phone",
     emptyGallery:"No uploads yet",
-    tPrint:"Print file saved", tMock:"Mockup saved", tAdded:"Design added", tNoArt:"Add a design to this zone first",
+    tPrint:"Print file saved", tPrintBoth:"Both print files saved", tMock:"Mockup saved", tAdded:"Design added", tNoArt:"Add a design to this zone first",
     tRemoved:"Removed from zone",
     rTrim:"Trim size", rBleed:"With bleed", rPixels:"Output", rQ:"Quality"
   },
@@ -648,7 +648,7 @@ const I18N={
     exportNote:"ملف الطباعة = تصميمك مقصوصًا على شكل الجزيرة بالمقاس الحقيقي. الماكينة تقص فتحات العدسات فقط.",
     dim_w:"العرض", dim_h:"الارتفاع", dim_r:"الزوايا", dim_top:"الهامش العلوي",
     output:"التصدير", quality:"جودة الطباعة", bleed:"هامش القص", bleedNone:"بدون",
-    dlPrint:"تنزيل ملف الطباعة", dlMock:"حفظ صورة المعاينة", finish:"الجوال",
+    dlPrint:"تنزيل ملف الطباعة", dlPrintBoth:"تنزيل ملفَّي الطباعة", dlMock:"حفظ صورة المعاينة", finish:"الجوال",
     helpTitle:"طريقة الاستخدام",
     helpLede:"ضع تصميم العميل على جزيرة الكاميرا أو ظهر آيفون 17 برو ماكس بالمقاسات الصحيحة، ثم صدّر ملف طباعة جاهز ومعاينة.",
     hStep1k:"١ · ارفع", hStep1:"أفلت أو انقر أو الصق صورة العميل على اليسار.",
@@ -661,7 +661,7 @@ const I18N={
     hintPlace:"اسحب للتحريك · اسحب زاوية للتحجيم · المقبض العلوي للتدوير",
     hintEmpty:"ارفع أو اختر تصميمًا ثم اسحبه على الجوال",
     emptyGallery:"لا توجد صور بعد",
-    tPrint:"تم حفظ ملف الطباعة", tMock:"تم حفظ المعاينة", tAdded:"تمت إضافة التصميم", tNoArt:"أضف تصميمًا لهذه المنطقة أولًا",
+    tPrint:"تم حفظ ملف الطباعة", tPrintBoth:"تم حفظ ملفَّي الطباعة", tMock:"تم حفظ المعاينة", tAdded:"تمت إضافة التصميم", tNoArt:"أضف تصميمًا لهذه المنطقة أولًا",
     tRemoved:"تمت الإزالة من المنطقة",
     rTrim:"مقاس القص", rBleed:"مع الهامش", rPixels:"الناتج", rQ:"الجودة"
   }
@@ -780,9 +780,8 @@ function renderSticker(zoneKey,opts){
   // artwork
   if(img){
     const c0=opts.map(z.tx,z.ty);                    // artwork center in px
-    const dispW=zoneDims(zoneKey).w*z.scale;          // mm
-    const dispH=dispW*(img.naturalHeight/img.naturalWidth);
-    const pw=dispW*opts.s, ph=dispH*opts.s;
+    const ds=artDisp(zoneKey);
+    const pw=ds.dispW*opts.s, ph=ds.dispH*opts.s;
     o.save();
     o.translate(c0.x,c0.y);
     o.rotate(z.rot*Math.PI/180);
@@ -818,6 +817,15 @@ function zoneDims(zoneKey){
   return zoneKey==='camera'?geoCam():geoBack();
 }
 function zoneCenter(zoneKey){const d=zoneDims(zoneKey);return{x:d.x+d.w/2,y:d.y+d.h/2};}
+/* displayed artwork size in mm — always aspect-locked (no distortion) */
+function artDisp(zoneKey){
+  const z=state.zones[zoneKey], img=z.designId?imgCache[z.designId]:null;
+  if(!img) return null;
+  const zw=zoneDims(zoneKey).w;
+  const dispW=zw*z.scale;
+  const dispH=zw*z.scale*(img.naturalHeight/img.naturalWidth);
+  return {dispW,dispH};
+}
 
 /* ---- Main stage scene ---- */
 function draw(){
@@ -985,27 +993,26 @@ function artCorners(zoneKey){
   const z=state.zones[zoneKey];
   const img=z.designId?imgCache[z.designId]:null;
   if(!img) return null;
-  const dispW=zoneDims(zoneKey).w*z.scale;
-  const dispH=dispW*(img.naturalHeight/img.naturalWidth);
-  const hw=dispW/2, hh=dispH/2;
+  const ds=artDisp(zoneKey);
+  const hw=ds.dispW/2, hh=ds.dispH/2;
   const a=z.rot*Math.PI/180, cos=Math.cos(a), sin=Math.sin(a);
   const cx=z.tx, cy=z.ty;
-  const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([dx,dy])=>{
-    const wx=cx+dx*cos-dy*sin, wy=cy+dx*sin+dy*cos;
-    return w2s(wx,wy);
-  });
+  const toS=(dx,dy)=>{ const wx=cx+dx*cos-dy*sin, wy=cy+dx*sin+dy*cos; return w2s(wx,wy); };
+  const pts=[[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([dx,dy])=>toS(dx,dy));
+  const edges={ t:toS(0,-hh), r:toS(hw,0), b:toS(0,hh), l:toS(-hw,0) };
   // rotate handle above top edge midpoint
-  const topMid={x:(pts[0].x+pts[1].x)/2,y:(pts[0].y+pts[1].y)/2};
+  const topMid=edges.t;
   const upx=Math.sin(a), upy=-Math.cos(a); // outward normal from top edge, in screen space (y down)
   const rotH={x:topMid.x+upx*26, y:topMid.y+upy*26};
-  return {pts,topMid,rotH};
+  return {pts,edges,topMid,rotH};
 }
 function drawHandles(c){
   const z=state.zones[state.activeZone];
   if(!z.designId) return;
   const info=artCorners(state.activeZone);
   if(!info) return;
-  const {pts,topMid,rotH}=info;
+  const {pts,edges,topMid,rotH}=info;
+  const a=state.zones[state.activeZone].rot*Math.PI/180;
   c.save();
   // outline box
   c.lineWidth=1.4; c.strokeStyle='rgba(74,134,255,.95)'; c.setLineDash([]);
@@ -1014,16 +1021,26 @@ function drawHandles(c){
   c.closePath(); c.stroke();
   // rotate stem
   c.beginPath(); c.moveTo(topMid.x,topMid.y); c.lineTo(rotH.x,rotH.y); c.stroke();
+  // edge (side) handles — enlarge toward that side, aspect locked
+  edgeBar(c,edges.l,a); edgeBar(c,edges.r,a);              // left/right
+  edgeBar(c,edges.t,a+Math.PI/2); edgeBar(c,edges.b,a+Math.PI/2); // top/bottom
   // corner handles
   pts.forEach(p=>handleDot(c,p.x,p.y,4.5));
   // rotate handle
   c.beginPath(); c.arc(rotH.x,rotH.y,5,0,Math.PI*2);
-  c.fillStyle='#fff'; c.fill(); c.lineWidth=1.6; c.strokeStyle='var(--accent)'; c.strokeStyle='#4a86ff'; c.stroke();
+  c.fillStyle='#fff'; c.fill(); c.lineWidth=1.6; c.strokeStyle='#4a86ff'; c.stroke();
   c.restore();
 }
 function handleDot(c,x,y,r){
   c.beginPath(); c.rect(x-r,y-r,r*2,r*2);
   c.fillStyle='#fff'; c.fill(); c.lineWidth=1.5; c.strokeStyle='#4a86ff'; c.stroke();
+}
+function edgeBar(c,p,angle){
+  c.save(); c.translate(p.x,p.y); c.rotate(angle);
+  c.beginPath();
+  if(c.roundRect) c.roundRect(-2,-7,4,14,2); else c.rect(-2,-7,4,14);
+  c.fillStyle='#fff'; c.fill(); c.lineWidth=1.4; c.strokeStyle='#4a86ff'; c.stroke();
+  c.restore();
 }
 
 /* ============================================================
@@ -1035,10 +1052,14 @@ function hitTest(sx,sy){
   if(!z.designId) return null;
   const info=artCorners(state.activeZone);
   if(!info) return null;
-  const {pts,rotH}=info;
+  const {pts,edges,rotH}=info;
   const near=(p)=>Math.hypot(p.x-sx,p.y-sy)<=13;
   if(near(rotH)) return {mode:'rotate'};
   for(let i=0;i<4;i++){ if(near(pts[i])) return {mode:'scale',corner:i}; }
+  if(near(edges.l)) return {mode:'side',side:'l'};
+  if(near(edges.r)) return {mode:'side',side:'r'};
+  if(near(edges.t)) return {mode:'side',side:'t'};
+  if(near(edges.b)) return {mode:'side',side:'b'};
   // inside polygon?
   if(pointInPoly(sx,sy,pts)) return {mode:'move'};
   return null;
@@ -1063,11 +1084,20 @@ function onDown(e){
   if(!hit) return;
   e.preventDefault();
   const center=w2s(z.tx,z.ty);
-  drag={mode:hit.mode, corner:hit.corner, undoPushed:false,
+  drag={mode:hit.mode, corner:hit.corner, side:hit.side, undoPushed:false,
         startPos:pos, startState:{tx:z.tx,ty:z.ty,scale:z.scale,rot:z.rot},
         startDist:Math.hypot(pos.x-center.x,pos.y-center.y),
         startAng:Math.atan2(pos.y-center.y,pos.x-center.x)};
-  stage.style.cursor= hit.mode==='move'?'grabbing':(hit.mode==='rotate'?'grabbing':'nwse-resize');
+  if(hit.mode==='side'){
+    // anchor = opposite edge midpoint (world); the image grows toward the dragged side
+    const a=z.rot*Math.PI/180, lx={x:Math.cos(a),y:Math.sin(a)}, ly={x:-Math.sin(a),y:Math.cos(a)};
+    const ds=artDisp(state.activeZone), HW=ds.dispW/2, HH=ds.dispH/2;
+    if(hit.side==='r'){ drag.anchor={x:z.tx-lx.x*HW,y:z.ty-lx.y*HW}; drag.axis=lx; drag.dim='w'; }
+    else if(hit.side==='l'){ drag.anchor={x:z.tx+lx.x*HW,y:z.ty+lx.y*HW}; drag.axis={x:-lx.x,y:-lx.y}; drag.dim='w'; }
+    else if(hit.side==='b'){ drag.anchor={x:z.tx-ly.x*HH,y:z.ty-ly.y*HH}; drag.axis=ly; drag.dim='h'; }
+    else { drag.anchor={x:z.tx+ly.x*HH,y:z.ty+ly.y*HH}; drag.axis={x:-ly.x,y:-ly.y}; drag.dim='h'; }
+  }
+  stage.style.cursor=cursorFor(hit.mode,hit.side,true);
   window.addEventListener('pointermove',onMove);
   window.addEventListener('pointerup',onUp);
 }
@@ -1086,6 +1116,19 @@ function onMove(e){
     let ns=drag.startState.scale*(d/(drag.startDist||1));
     z.scale=clamp(ns,0.1,5);
     syncScaleUI();
+  }else if(drag.mode==='side'){
+    // uniform (aspect-locked) resize, anchored to the opposite edge → grows toward the dragged side
+    const pw=s2w(pos.x,pos.y);
+    const proj=(pw.x-drag.anchor.x)*drag.axis.x+(pw.y-drag.anchor.y)*drag.axis.y; // signed mm along axis
+    const zw=zoneDims(state.activeZone).w;
+    const img=imgCache[z.designId], aspect=img.naturalHeight/img.naturalWidth;
+    const disp=Math.max(proj,2);
+    let ns=clamp(drag.dim==='w' ? disp/zw : disp/(zw*aspect), 0.1, 5);
+    z.scale=ns;
+    const newDisp = drag.dim==='w' ? zw*ns : zw*ns*aspect;
+    z.tx=drag.anchor.x+drag.axis.x*(newDisp/2);
+    z.ty=drag.anchor.y+drag.axis.y*(newDisp/2);
+    syncScaleUI();
   }else if(drag.mode==='rotate'){
     const center=w2s(z.tx,z.ty);
     const ang=Math.atan2(pos.y-center.y,pos.x-center.x);
@@ -1095,6 +1138,11 @@ function onMove(e){
     z.rot=deg; syncRotUI();
   }
   draw();
+}
+function cursorFor(mode,side,active){
+  if(mode==='move'||mode==='rotate') return active?'grabbing':'grab';
+  if(mode==='side') return (side==='l'||side==='r')?'ew-resize':'ns-resize';
+  return 'nwse-resize'; // corner
 }
 function onUp(){
   drag=null; stage.style.cursor='default';
@@ -1106,7 +1154,7 @@ function onHover(e){
   if(drag) return;
   const pos=getPos(e);
   const hit=hitTest(pos.x,pos.y);
-  stage.style.cursor= !hit?'default': hit.mode==='move'?'grab': hit.mode==='rotate'?'grab':'nwse-resize';
+  stage.style.cursor= !hit?'default':cursorFor(hit.mode,hit.side,false);
 }
 
 /* wheel zoom */
@@ -1420,10 +1468,19 @@ function makePrintCanvas(zoneKey){
   return {canvas:out, name:'iphone17promax-'+zoneKey+'-print-'+d.w.toFixed(0)+'x'+d.h.toFixed(0)+'mm-'+state.dpi+'dpi.png'};
 }
 $('exportPrint').addEventListener('click',()=>{
-  const r=makePrintCanvas(state.activeZone);
-  if(!r){ toast(t('tNoArt')); return; }
-  download(r.canvas,r.name); toast(t('tPrint'));
+  // Export every island that has a design — both at once, as separate files.
+  const zones=['camera','back'].filter(k=>state.zones[k].designId||state.zones[k].bg);
+  if(!zones.length){ toast(t('tNoArt')); return; }
+  zones.forEach((k,i)=>setTimeout(()=>{ const r=makePrintCanvas(k); if(r) download(r.canvas,r.name); }, i*600));
+  toast(zones.length>1 ? t('tPrintBoth') : t('tPrint'));
 });
+let _expSpan=null;
+function updateExportBtn(){
+  if(!_expSpan) _expSpan=$('exportPrint').querySelector('span');
+  const both=(state.zones.camera.designId||state.zones.camera.bg)&&(state.zones.back.designId||state.zones.back.bg);
+  const txt = both ? t('dlPrintBoth') : t('dlPrint');
+  if(_expSpan && _expSpan.textContent!==txt) _expSpan.textContent=txt;
+}
 /* Mockup: full phone render at high-res, no handles/guides. */
 $('exportMock').addEventListener('click',()=>{
   const scale=1400/PHONE.w;            // ~1400px wide phone
@@ -1471,6 +1528,7 @@ function updateReadout(){
     '<div class="row"><span>'+t('rTrim')+'</span><b>'+d.w.toFixed(1)+' × '+d.h.toFixed(1)+' mm</b></div>'+
     '<div class="row"><span>'+t('rBleed')+'</span><b>'+totalW.toFixed(1)+' × '+totalH.toFixed(1)+' <span class="u">mm</span></b></div>'+
     '<div class="row"><span>'+t('rPixels')+'</span><b>'+W+' × '+H+' px</b></div>';
+  updateExportBtn();
 }
 
 /* ============================================================
