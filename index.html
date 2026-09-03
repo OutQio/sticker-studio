@@ -228,6 +228,9 @@
   .mini:hover{border-color:var(--line-strong);background:var(--panel-3)}
   .mini svg{width:14px;height:14px;color:var(--muted)}
   .mini.wide{grid-column:1/-1}
+  .mini.danger{color:var(--danger)}
+  .mini.danger svg{color:var(--danger)}
+  .mini.danger:hover{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 10%,var(--panel-2))}
 
   .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;font-size:13px}
   .toggle-row .cap{color:var(--text)}
@@ -444,6 +447,7 @@
           <button class="mini" id="fillBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3H3v6M15 21h6v-6M3 3l7 7M21 21l-7-7"/></svg><span data-i18n="fill">Fill</span></button>
           <button class="mini" id="centerBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.2"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg><span data-i18n="center">Center</span></button>
           <button class="mini" id="resetBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span data-i18n="reset">Reset</span></button>
+          <button class="mini wide danger" id="removeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg><span data-i18n="removeImg">Remove image</span></button>
         </div>
       </div>
 
@@ -509,6 +513,10 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m0 0-4 4m4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
             <span data-i18n="dlMock">Save preview mockup</span>
           </button>
+          <button class="cta ghost" id="aiPromptBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M9 12h6M9 16h4"/></svg>
+            <span data-i18n="aiPrompt">Copy AI image prompt</span>
+          </button>
         </div>
       </div>
     </aside>
@@ -547,12 +555,12 @@
    ============================================================ */
 const PHONE={w:78,h:163.4,r:18};   // official body size (mm)
 
-// ---- Editable sticker geometry (mm). Camera-island footprint & lens layout come
-// from Apple's OFFICIAL iPhone 17 Pro Max Dimensional Drawing: plateau ≈ 73.8 × 48.0 mm,
-// centred; lenses Ø16.20, flash Ø6.80, LiDAR Ø6.65, mic Ø1.15; cluster vertically centred.
-// The shop can still fine-tune to match their exact die-cut. ----
+// ---- Editable sticker geometry (mm). Camera-island size comes from the shop's
+// ACTUAL Mimaki FineCut die-cut file: 67.74 × 37.73 mm (inset from Apple's full
+// plateau). Lens layout keeps Apple's real diameters (Ø16.20 lens / Ø6.80 flash /
+// Ø6.65 LiDAR / Ø1.15 mic) positioned to the cut file. Still user-editable. ----
 const GEO_DEFAULT={
-  camW:73.8, camH:48.0, camR:14, camTop:4,   // camera-island sticker (plateau)
+  camW:67.74, camH:37.73, camR:9, camTop:6,  // camera-island sticker (die-cut file)
   backW:76, backH:161, backR:17, backTop:1.2 // back-panel sticker
 };
 function geoCam(){const g=state.geo;return{x:(PHONE.w-g.camW)/2,y:g.camTop,w:g.camW,h:g.camH,r:Math.min(g.camR,g.camH/2,g.camW/2)};}
@@ -562,13 +570,13 @@ function geoPlateau(){const z=geoCam();return{x:z.x-1,y:z.y-1,w:z.w+2,h:z.h+2,r:
 // Lens / sensor positions as fractions of the camera-island zone (from Apple's
 // drawing). Lens holes are cut by the MACHINE, so they are preview-only and are
 // never punched into the exported print file.
-const LENSES=[
-  {fx:0.195, fy:0.300, fr:0.110,  type:'lens'},   // Wide       Ø16.20
-  {fx:0.195, fy:0.700, fr:0.110,  type:'lens'},   // Ultra-Wide Ø16.20
-  {fx:0.438, fy:0.500, fr:0.110,  type:'lens'},   // Telephoto  Ø16.20
-  {fx:0.869, fy:0.288, fr:0.0461, type:'flash'},  // Flash      Ø6.80
-  {fx:0.780, fy:0.500, fr:0.0078, type:'mic'},    // Rear mic   Ø1.15
-  {fx:0.869, fy:0.712, fr:0.0451, type:'lidar'}   // LiDAR      Ø6.65
+const LENSES=[   // fractions calibrated to the 67.74 × 37.73 mm cut file
+  {fx:0.148, fy:0.245, fr:0.1196, type:'lens'},   // Wide       Ø16.20
+  {fx:0.148, fy:0.755, fr:0.1196, type:'lens'},   // Ultra-Wide Ø16.20
+  {fx:0.413, fy:0.500, fr:0.1196, type:'lens'},   // Telephoto  Ø16.20
+  {fx:0.875, fy:0.233, fr:0.0502, type:'flash'},  // Flash      Ø6.80
+  {fx:0.860, fy:0.500, fr:0.0085, type:'mic'},    // Rear mic   Ø1.15
+  {fx:0.875, fy:0.767, fr:0.0491, type:'lidar'}   // LiDAR      Ø6.65
 ];
 function lensAbs(){const z=geoCam();return LENSES.map(L=>({x:z.x+L.fx*z.w, y:z.y+L.fy*z.h, r:L.fr*z.w, type:L.type}));}
 const APPLE={x:39,y:106,r:10};
@@ -589,7 +597,7 @@ const BG_COLORS=['#0b5cff','#e8113c','#111318','#ffffff','#12b76a','#f5c518'];
 /* ============================================================
    2. STATE
    ============================================================ */
-function freshZone(){return{designId:null,tx:0,ty:0,scale:1,rot:0,bg:null};}
+function freshZone(){return{designId:null,tx:0,ty:0,scale:1,stretchX:1,stretchY:1,rot:0,bg:null};}
 const state={
   activeZone:'camera',
   lang:'en',
@@ -619,7 +627,8 @@ const I18N={
     appName:"Sticker Studio", zoneCamera:"Camera island", zoneBack:"Back panel",
     artwork:"Artwork", uploadTitle:"Upload a design", uploadSub:"Drop image, click, or paste — PNG / JPG / SVG",
     samples:"Quick samples", transform:"Placement", scale:"Size", rotate:"Rotation",
-    fit:"Fit", fill:"Fill", center:"Center", reset:"Reset",
+    fit:"Fit", fill:"Fill", center:"Center", reset:"Reset", removeImg:"Remove image",
+    aiPrompt:"Copy AI image prompt", tCopied:"Prompt copied — paste it into Gemini or any AI",
     stickerOpts:"Sticker options", bg:"Backing color",
     lensCut:"Show lenses", lensCutSub:"Cameras, flash & sensors — preview only",
     lensOpacity:"Lens opacity",
@@ -634,7 +643,7 @@ const I18N={
     helpTitle:"How to use",
     helpLede:"Place a customer's design on the exact camera island or back panel of the iPhone 17 Pro Max, then export a print-ready file and a preview.",
     hStep1k:"1 · Upload", hStep1:"Drop, click, or paste the customer's image on the left.",
-    hStep2k:"2 · Place", hStep2:"Drag on the phone to move. Corner handles resize, top handle rotates.",
+    hStep2k:"2 · Place", hStep2:"Drag to move. Corners resize, side handles stretch, top handle rotates.",
     hStep3k:"3 · Preview", hStep3:"The preview shows the lens holes so you can arrange art around them.",
     hStep4k:"4 · Export", hStep4:"Print file = your design die-cut to the island shape (the machine cuts the lens holes). Mockup = preview picture.",
     hKeyDel:"Remove artwork from this zone.", arrows:"Arrows", hKeyArrow:"Nudge by 0.5 mm · hold Shift for 2 mm.",
@@ -651,7 +660,8 @@ const I18N={
     appName:"استوديو الاستكرات", zoneCamera:"جزيرة الكاميرا", zoneBack:"الظهر",
     artwork:"التصميم", uploadTitle:"ارفع تصميمًا", uploadSub:"أفلت صورة أو انقر أو الصق — PNG / JPG / SVG",
     samples:"عينات سريعة", transform:"الموضع", scale:"الحجم", rotate:"التدوير",
-    fit:"احتواء", fill:"ملء", center:"توسيط", reset:"إعادة",
+    fit:"احتواء", fill:"ملء", center:"توسيط", reset:"إعادة", removeImg:"إزالة الصورة",
+    aiPrompt:"نسخ برومبت الذكاء الاصطناعي", tCopied:"تم النسخ — الصقه في Gemini أو أي ذكاء اصطناعي",
     stickerOpts:"خيارات الاستكر", bg:"لون الخلفية",
     lensCut:"إظهار العدسات", lensCutSub:"الكاميرات والفلاش والحساسات — للمعاينة فقط",
     lensOpacity:"شفافية العدسات",
@@ -666,7 +676,7 @@ const I18N={
     helpTitle:"طريقة الاستخدام",
     helpLede:"ضع تصميم العميل على جزيرة الكاميرا أو ظهر آيفون 17 برو ماكس بالمقاسات الصحيحة، ثم صدّر ملف طباعة جاهز ومعاينة.",
     hStep1k:"١ · ارفع", hStep1:"أفلت أو انقر أو الصق صورة العميل على اليسار.",
-    hStep2k:"٢ · ضع", hStep2:"اسحب على الجوال للتحريك. الزوايا للتحجيم والمقبض العلوي للتدوير.",
+    hStep2k:"٢ · ضع", hStep2:"اسحب للتحريك. الزوايا للتحجيم، والجوانب للتمديد، والمقبض العلوي للتدوير.",
     hStep3k:"٣ · معاينة", hStep3:"المعاينة تُظهر فتحات العدسات لتنسّق التصميم حولها.",
     hStep4k:"٤ · صدّر", hStep4:"ملف الطباعة = تصميمك مقصوصًا على شكل الجزيرة (الماكينة تقص فتحات العدسات). المعاينة = صورة العرض.",
     hKeyDel:"إزالة التصميم من هذه المنطقة.", arrows:"الأسهم", hKeyArrow:"تحريك ٠٫٥ مم · Shift لـ ٢ مم.",
@@ -831,13 +841,14 @@ function zoneDims(zoneKey){
   return zoneKey==='camera'?geoCam():geoBack();
 }
 function zoneCenter(zoneKey){const d=zoneDims(zoneKey);return{x:d.x+d.w/2,y:d.y+d.h/2};}
-/* displayed artwork size in mm — always aspect-locked (no distortion) */
+/* displayed artwork size in mm — scale = overall size (corners),
+   stretchX/Y = per-axis stretch from the side handles */
 function artDisp(zoneKey){
   const z=state.zones[zoneKey], img=z.designId?imgCache[z.designId]:null;
   if(!img) return null;
   const zw=zoneDims(zoneKey).w;
-  const dispW=zw*z.scale;
-  const dispH=zw*z.scale*(img.naturalHeight/img.naturalWidth);
+  const dispW=zw*z.scale*(z.stretchX||1);
+  const dispH=zw*z.scale*(img.naturalHeight/img.naturalWidth)*(z.stretchY||1);
   return {dispW,dispH};
 }
 
@@ -1131,18 +1142,24 @@ function onMove(e){
     z.scale=clamp(ns,0.1,5);
     syncScaleUI();
   }else if(drag.mode==='side'){
-    // uniform (aspect-locked) resize, anchored to the opposite edge → grows toward the dragged side
+    // STRETCH that axis only, anchored to the opposite edge → grows toward the dragged side
     const pw=s2w(pos.x,pos.y);
     const proj=(pw.x-drag.anchor.x)*drag.axis.x+(pw.y-drag.anchor.y)*drag.axis.y; // signed mm along axis
     const zw=zoneDims(state.activeZone).w;
     const img=imgCache[z.designId], aspect=img.naturalHeight/img.naturalWidth;
     const disp=Math.max(proj,2);
-    let ns=clamp(drag.dim==='w' ? disp/zw : disp/(zw*aspect), 0.1, 5);
-    z.scale=ns;
-    const newDisp = drag.dim==='w' ? zw*ns : zw*ns*aspect;
-    z.tx=drag.anchor.x+drag.axis.x*(newDisp/2);
-    z.ty=drag.anchor.y+drag.axis.y*(newDisp/2);
-    syncScaleUI();
+    let newDisp;
+    if(drag.dim==='w'){
+      z.stretchX=clamp(disp/(zw*z.scale),0.1,8);
+      newDisp=zw*z.scale*z.stretchX;
+      z.tx=drag.anchor.x+drag.axis.x*(newDisp/2);
+      z.ty=drag.anchor.y+drag.axis.y*(newDisp/2);
+    }else{
+      z.stretchY=clamp(disp/(zw*z.scale*aspect),0.1,8);
+      newDisp=zw*z.scale*aspect*z.stretchY;
+      z.tx=drag.anchor.x+drag.axis.x*(newDisp/2);
+      z.ty=drag.anchor.y+drag.axis.y*(newDisp/2);
+    }
   }else if(drag.mode==='rotate'){
     const center=w2s(z.tx,z.ty);
     const ang=Math.atan2(pos.y-center.y,pos.x-center.x);
@@ -1228,12 +1245,18 @@ $('fitBtn').addEventListener('click',()=>{pushUndo();placeArt('fit');});
 $('fillBtn').addEventListener('click',()=>{pushUndo();placeArt('fill');});
 $('centerBtn').addEventListener('click',()=>{pushUndo();const z=state.zones[state.activeZone];const c=zoneCenter(state.activeZone);z.tx=c.x;z.ty=c.y;draw();save();});
 $('resetBtn').addEventListener('click',()=>{pushUndo();placeArt('fit');const z=state.zones[state.activeZone];z.rot=0;syncRotUI();draw();save();});
+$('removeBtn').addEventListener('click',()=>{
+  const z=state.zones[state.activeZone];
+  if(!z.designId && !z.bg){ toast(t('tNoArt')); return; }
+  pushUndo(); z.designId=null; z.bg=null;
+  buildGallery(); syncZoneUI(); draw(); save(); toast(t('tRemoved'));
+});
 
 function placeArt(mode){
   const zoneKey=state.activeZone, z=state.zones[zoneKey];
   const img=z.designId?imgCache[z.designId]:null;
   const c=zoneCenter(zoneKey);
-  z.tx=c.x; z.ty=c.y;
+  z.tx=c.x; z.ty=c.y; z.stretchX=1; z.stretchY=1;   // clear stretch
   if(img){
     const zd=zoneDims(zoneKey);
     const ar=img.naturalHeight/img.naturalWidth;    // design h/w
@@ -1365,6 +1388,7 @@ function addDesign(src,name,isSample,fixedId){
   return new Promise(res=>{
     if(fixedId && state.designs.some(d=>d.id===fixedId)){ res(state.designs.find(d=>d.id===fixedId)); return; }
     const img=new Image();
+    if(/^https?:\/\//.test(src)) img.crossOrigin='anonymous'; // keep canvas exportable
     img.onload=()=>{
       const id=fixedId||('d'+(idSeq++));
       imgCache[id]=img;
@@ -1527,6 +1551,36 @@ $('exportMock').addEventListener('click',()=>{
   toast(t('tMock'));
 });
 
+/* AI image prompt for the ACTIVE zone — paste into Gemini (or any image AI). */
+function buildAiPrompt(){
+  const zoneKey=state.activeZone, d=zoneDims(zoneKey);
+  const pxPerMM=state.dpi/25.4;
+  const W=Math.round(d.w*pxPerMM), H=Math.round(d.h*pxPerMM);
+  const r=(zoneKey==='camera'?state.geo.camR:state.geo.backR);
+  const zoneName=zoneKey==='camera'?'camera island (top camera bar)':'back panel';
+  let p='Generate one artwork image for an iPhone 17 Pro Max '+zoneName+' sticker.\n'
+    +'- Exact output size: '+W+'×'+H+' px ('+d.w.toFixed(2)+'×'+d.h.toFixed(2)+' mm at '+state.dpi+' DPI). Same aspect ratio at higher resolution is fine.\n'
+    +'- Fill the ENTIRE canvas edge-to-edge. No borders, frames, watermarks, or text near the edges.\n'
+    +'- The sticker is die-cut with '+r.toFixed(0)+' mm rounded corners: keep important details at least 3 mm ('+Math.round(3*pxPerMM)+' px) from every edge.\n';
+  if(zoneKey==='camera'){
+    p+='- Lens holes are cut AFTER printing: three large circles on the left third, a small column near the right edge. Continuous patterns/gradients work best; keep any focal element in the middle band.\n';
+  }else{
+    p+='- This covers the tall lower back panel (the camera bar is a separate sticker).\n';
+  }
+  p+='- Design brief: [describe the customer’s requested design here].';
+  return p;
+}
+$('aiPromptBtn').addEventListener('click',async()=>{
+  const txt=buildAiPrompt();
+  try{ await navigator.clipboard.writeText(txt); toast(t('tCopied')); }
+  catch(e){
+    const ta=document.createElement('textarea'); ta.value=txt;
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); toast(t('tCopied')); }catch(_){}
+    ta.remove();
+  }
+});
+
 /* ============================================================
    10. READOUT
    ============================================================ */
@@ -1651,7 +1705,7 @@ function save(){
       const data={
         activeZone:state.activeZone,lang:state.lang,theme:state.theme,finish:state.finish,
         dpi:state.dpi,bleed:state.bleed,guides:state.guides,zoom:state.zoom,lensOpacity:state.lensOpacity,
-        geo:state.geo, geoV:2,
+        geo:state.geo, geoV:3,
         zones:state.zones,
         designs:state.designs.map(d=>({id:d.id,name:d.name,src:d.src,sample:d.sample})),
         idSeq
@@ -1669,8 +1723,8 @@ function load(){
     clip:true,guides:data.guides!==false,zoom:data.zoom||1,
     lensOpacity:data.lensOpacity==null?1:data.lensOpacity});
   // Only restore saved sizes from the current geometry version; older cached
-  // sessions used a shorter island, so fall back to the corrected defaults.
-  if(data.geo && data.geoV===2) state.geo=Object.assign({},GEO_DEFAULT,data.geo);
+  // sessions used a different island size, so fall back to the shop's cut-file defaults.
+  if(data.geo && data.geoV===3) state.geo=Object.assign({},GEO_DEFAULT,data.geo);
   else state.geo=Object.assign({},GEO_DEFAULT);
   if(data.zones)state.zones=data.zones;
   if(!state.zones.camera)state.zones.camera=freshZone();
@@ -1717,6 +1771,25 @@ async function init(){
   window.addEventListener('resize',resize);
   // observe container size (rail collapse etc.)
   if(window.ResizeObserver){new ResizeObserver(resize).observe(stage.parentElement);}
+
+  // URL control API (for links & AI agents):
+  //   ?zone=camera|back            select a zone
+  //   &img=<CORS-enabled PNG URL>  load a design and place it (fill)
+  //   &name=<label>                gallery label for that design
+  try{
+    const q=new URLSearchParams(location.search);
+    const qz=q.get('zone');
+    if(qz==='camera'||qz==='back'){
+      state.activeZone=qz;
+      document.querySelectorAll('.zone-tabs button').forEach(x=>x.setAttribute('aria-selected',x.dataset.zone===qz));
+      syncZoneUI(); draw();
+    }
+    const qi=q.get('img');
+    if(qi && /^https?:\/\//.test(qi)){
+      const d=await addDesign(qi, q.get('name')||'From link', false);
+      if(d) assignDesign(d.id); else toast('Image URL failed to load (needs CORS)');
+    }
+  }catch(e){}
 
   if(!localStorage.getItem(LS+'.seen')){setTimeout(()=>$('helpBg').classList.add('show'),400);localStorage.setItem(LS+'.seen','1');}
 }
