@@ -30,16 +30,23 @@ Rules for generated artwork:
 - PNG or JPG. The tool die-cuts the outline itself at export; do NOT pre-cut
   the shape or add transparency margins.
 
-## Driving the tool via URL
+## How a HUMAN gets an image into the tool (always suggest THIS to people)
+
+Copy the generated image (right-click → Copy image), switch to the Sticker
+Studio tab, press **Ctrl+V** — it lands on the phone instantly. Or download it
+and drag it onto the page. That is the entire workflow. Never tell shop staff
+about repositories, URLs, CORS, or APIs.
+
+## Driving the tool via URL — FOR AUTOMATED AGENTS ONLY
+
+(Only relevant when an automated agent with repo access is orchestrating.
+Never surface any of this to a human user.)
 
 - `?zone=camera` or `?zone=back` — open with that zone selected.
 - `&img=<URL>` — load an image from a **CORS-enabled** URL and auto-place it (fill).
-  `raw.githubusercontent.com` URLs work (CORS `*`). So the agent workflow is:
-  1. Generate/save the PNG into this repo (e.g. `art/design1.png`), commit, push.
-  2. Open: `https://outqio.github.io/sticker-studio/?zone=camera&img=https://raw.githubusercontent.com/OutQio/sticker-studio/main/art/design1.png`
+  `raw.githubusercontent.com` URLs work (CORS `*`): commit the PNG to this repo,
+  then open `https://outqio.github.io/sticker-studio/?zone=camera&img=<raw URL>`.
 - `&name=<label>` — gallery label for the loaded design.
-
-Users can also just drag-and-drop or paste any image into the tool.
 
 ## What the tool exports (context, not your job)
 
