@@ -18,17 +18,24 @@ drive the tool via its URL API.
 | Back panel | 76 × 161 | ≈ 1 : 2.118 | 898 × 1902 | 1795 × 3803 |
 
 Rules for generated artwork:
-- **Fill the whole canvas edge-to-edge.** No borders, frames, watermarks, or captions.
-- Corners are die-cut round (camera ≈9 mm radius, back ≈17 mm): keep critical
-  elements ≥3 mm (≈35 px @300 DPI) from every edge.
-- **Camera island — THE MOST IMPORTANT RULE:** lens holes are cut AFTER printing —
-  three Ø16.2 mm circles on the left third and a flash/LiDAR column at the far
-  right. The only fully visible area is the MIDDLE BAND (~50–82% of the width,
-  full height). The HERO of the design (logo/character/face) must sit inside
-  that band, as large as it fits, vertically centered; the rest is continuous
-  background that survives having circles cut out of it.
+- **FLAT ARTWORK ONLY — never a mockup.** Never draw the phone, camera lenses,
+  lens rings, circles, holes, cutouts, or a device outline into the image. The
+  output is a plain flat rectangle of graphics; the physical phone provides the
+  lenses. Any lens/hole/phone in the output = wrong, regenerate.
+- **Hero placement (camera island):** holes are cut over the LEFT third and near
+  the far-right edge after printing. Left third = background only; the HERO
+  (logo/character/face) goes RIGHT OF CENTER (~two-thirds across), big,
+  vertically centered; small clear margin at the far right. Background is one
+  continuous pattern that survives circles being cut from its left.
+- **Quality:** highest resolution available — camera ≥1600×900 (16:9), back
+  ≥1080×1920 (9:16). Small images print blurry; the tool shows a red ⚠ when
+  the source is too small.
+- **Fill the whole canvas edge-to-edge.** No borders, frames, watermarks, or
+  captions; keep critical elements ≥3 mm (≈35 px @300 DPI) from every edge.
 - **Reference images:** if the requester attaches one, its main subject IS the
   hero — redraw/extract it and place it per the rule above, matching its style.
+- **Iterate on feedback:** apply requested edits (move/resize hero, colors,
+  style) by regenerating under the same rules until approved.
 - **Back panel:** plain tall rectangle (rounded corners); the camera bar is a
   separate sticker, not part of this artwork.
 - PNG or JPG. The tool die-cuts the outline itself at export; do NOT pre-cut

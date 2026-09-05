@@ -668,7 +668,8 @@ const I18N={
     emptyGallery:"No uploads yet",
     tPrint:"Print file saved", tPrintBoth:"Both print files saved", tMock:"Mockup saved", tAdded:"Design added", tNoArt:"Add a design to this zone first",
     tRemoved:"Removed from zone",
-    rTrim:"Trim size", rBleed:"With bleed", rPixels:"Output", rQ:"Quality"
+    rTrim:"Trim size", rBleed:"With bleed", rPixels:"Output", rQ:"Quality", rSrc:"Image quality",
+    tLowRes:"Image too small for sharp printing — download it from the AI instead of copying, or ask for a bigger one"
   },
   ar:{
     appName:"استوديو الاستكرات", zoneCamera:"جزيرة الكاميرا", zoneBack:"الظهر",
@@ -703,7 +704,8 @@ const I18N={
     emptyGallery:"لا توجد صور بعد",
     tPrint:"تم حفظ ملف الطباعة", tPrintBoth:"تم حفظ ملفَّي الطباعة", tMock:"تم حفظ المعاينة", tAdded:"تمت إضافة التصميم", tNoArt:"أضف تصميمًا لهذه المنطقة أولًا",
     tRemoved:"تمت الإزالة من المنطقة",
-    rTrim:"مقاس القص", rBleed:"مع الهامش", rPixels:"الناتج", rQ:"الجودة"
+    rTrim:"مقاس القص", rBleed:"مع الهامش", rPixels:"الناتج", rQ:"الجودة", rSrc:"جودة الصورة",
+    tLowRes:"الصورة صغيرة والطباعة ستطلع ضعيفة — نزّل الصورة بدل نسخها أو اطلب صورة أكبر"
   }
 };
 function t(k){return (I18N[state.lang]&&I18N[state.lang][k])||I18N.en[k]||k;}
@@ -1423,7 +1425,9 @@ function assignDesign(id){
   z.designId=id; z.rot=0;
   placeArt('fill');
   buildGallery(); draw(); save();
-  showHint(t('hintPlace'));
+  const im=imgCache[id], zd=zoneDims(state.activeZone);
+  if(im && im.naturalWidth < zd.w*(state.dpi/25.4)*0.75) toast(t('tLowRes'));
+  else showHint(t('hintPlace'));
 }
 function removeDesign(id){
   state.designs=state.designs.filter(d=>d.id!==id);
@@ -1592,20 +1596,24 @@ function buildAiPrompt(){
   const W=Math.round(d.w*pxPerMM), H=Math.round(d.h*pxPerMM);
   const r=(zoneKey==='camera'?state.geo.camR:state.geo.backR);
   const zoneName=zoneKey==='camera'?'camera island (top camera bar)':'back panel';
-  let p='Generate one artwork image for an iPhone 17 Pro Max '+zoneName+' sticker.\n';
+  let p='Generate one artwork image for an iPhone 17 Pro Max '+zoneName+' sticker.\n'
+    +'\nABSOLUTE RULE — flat artwork only:\n'
+    +'This is the FLAT PRINTED GRAPHIC, not a product photo. NEVER draw the phone, camera lenses, lens rings, circles, holes, cutouts, device outline, or any mockup of the sticker on a phone. The real lenses exist on the physical phone — the artwork itself is a plain flat rectangle of graphics only. If any lens, hole, or phone appears in the image, the output is wrong.\n';
   if(zoneKey==='camera'){
-    p+='\nTHE MOST IMPORTANT RULE — hero placement:\n'
-      +'After printing, a machine cuts three big lens holes over the LEFT third of the image and a small sensor column at the FAR RIGHT edge. The only fully visible open area is the MIDDLE BAND: roughly from 50% to 82% of the image width, full height. Place the HERO of the design (the logo, character, face, or main subject) inside that middle band, as LARGE as it can fit, vertically centered. Never put the hero on the left third or at the far right edge — it would be cut away.\n'
-      +'The rest of the canvas is background: a continuous pattern, texture, or gradient that fills everything edge-to-edge and still looks good with circles cut out of it.\n\n';
+    p+='\nCOMPOSITION — the most important rule:\n'
+      +'- The LEFT THIRD of the image must be BACKGROUND ONLY (three big lens holes are cut there after printing).\n'
+      +'- Put the HERO (the logo / character / face / main subject) RIGHT OF CENTER, at about two-thirds across the width — big and bold, vertically centered.\n'
+      +'- Leave a small clear margin at the far right edge (a sensor strip is cut there).\n'
+      +'- Background: one continuous pattern, texture, or scene filling the whole canvas edge-to-edge, that still looks good when circles are cut from its left side.\n';
+  }else{
+    p+='\nCOMPOSITION:\n'
+      +'- Tall portrait design; put the HERO center or upper-center, large. Background fills everything edge-to-edge.\n'
+      +'- (This is the lower back panel — the camera bar is a separate sticker.)\n';
   }
-  p+='Technical requirements:\n'
-    +'- Exact output size: '+W+'×'+H+' px ('+d.w.toFixed(2)+'×'+d.h.toFixed(2)+' mm at '+state.dpi+' DPI). Same aspect ratio at higher resolution is fine.\n'
-    +'- Fill the ENTIRE canvas edge-to-edge. No borders, frames, watermarks, or captions.\n'
-    +'- Die-cut rounded corners ('+r.toFixed(0)+' mm): keep details at least 3 mm ('+Math.round(3*pxPerMM)+' px) from every edge.\n';
-  if(zoneKey==='back'){
-    p+='- This is the tall lower back panel (the camera bar is a separate sticker). Place the hero center or upper-center, large.\n';
-  }
-  p+='\nIf a reference image is attached: use it as the hero — extract or faithfully redraw its main subject and place it exactly as described above, then build a matching background around it. Match its colors and style.\n'
+  p+='\nQUALITY — mandatory:\n'
+    +'- '+(zoneKey==='camera'?'Wide landscape 16:9':'Tall portrait 9:16')+', at the HIGHEST resolution you can produce — minimum '+(zoneKey==='camera'?'1600×900':'1080×1920')+' px. Sharp and detailed: this file is PRINTED at '+state.dpi+' DPI ('+d.w.toFixed(1)+'×'+d.h.toFixed(1)+' mm, needs '+W+'×'+H+' px minimum).\n'
+    +'- Fill the ENTIRE canvas. No borders, frames, watermarks, or captions. Keep details away from the outer edges (rounded '+r.toFixed(0)+' mm corners are cut).\n'
+    +'\nIf a reference image is attached: its main subject IS the hero — extract or faithfully redraw it, place it exactly as described above, and build a matching background in the same colors/style.\n'
     +'\nDesign brief: [describe the customer’s requested design here, or attach their reference image].';
   return p;
 }
@@ -1631,10 +1639,17 @@ function updateReadout(){
   const W=Math.round(totalW*pxPerMM), H=Math.round(totalH*pxPerMM);
   $('dpiOut').textContent=state.dpi+' DPI';
   $('zoneDimBadge').textContent=d.w.toFixed(0)+' × '+d.h.toFixed(0)+' mm';
+  let srcRow='';
+  const zz=state.zones[zoneKey], simg=zz.designId?imgCache[zz.designId]:null;
+  if(simg){
+    const ok=simg.naturalWidth>=W*0.75;
+    srcRow='<div class="row"><span>'+t('rSrc')+'</span><b style="color:'+(ok?'var(--good)':'var(--danger)')+'">'
+      +simg.naturalWidth+' × '+simg.naturalHeight+' px '+(ok?'✓':'⚠')+'</b></div>';
+  }
   $('readout').innerHTML=
     '<div class="row"><span>'+t('rTrim')+'</span><b>'+d.w.toFixed(1)+' × '+d.h.toFixed(1)+' mm</b></div>'+
     '<div class="row"><span>'+t('rBleed')+'</span><b>'+totalW.toFixed(1)+' × '+totalH.toFixed(1)+' <span class="u">mm</span></b></div>'+
-    '<div class="row"><span>'+t('rPixels')+'</span><b>'+W+' × '+H+' px</b></div>';
+    '<div class="row"><span>'+t('rPixels')+'</span><b>'+W+' × '+H+' px</b></div>'+srcRow;
   updateExportBtn();
 }
 
