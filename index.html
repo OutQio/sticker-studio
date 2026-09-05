@@ -1601,10 +1601,11 @@ function buildAiPrompt(){
     +'This is the FLAT PRINTED GRAPHIC, not a product photo. NEVER draw the phone, camera lenses, lens rings, circles, holes, cutouts, device outline, or any mockup of the sticker on a phone. The real lenses exist on the physical phone — the artwork itself is a plain flat rectangle of graphics only. If any lens, hole, or phone appears in the image, the output is wrong.\n';
   if(zoneKey==='camera'){
     p+='\nCOMPOSITION — the most important rule:\n'
+      +'- The sticker is CROPPED out of this image in a separate tool and can be moved or resized, so compose with SPARE ROOM: keep all important content comfortably inside the central area and extend the background seamlessly to every edge with at least 15–20% extra on all sides. Shrinking or shifting the image must only reveal more background, never gaps.\n'
       +'- The LEFT THIRD of the image must be BACKGROUND ONLY (three big lens holes are cut there after printing).\n'
       +'- Put the HERO (the logo / character / face / main subject) RIGHT OF CENTER, at about two-thirds across the width — big and bold, vertically centered.\n'
-      +'- Leave a small clear margin at the far right edge (a sensor strip is cut there).\n'
-      +'- Background: one continuous pattern, texture, or scene filling the whole canvas edge-to-edge, that still looks good when circles are cut from its left side.\n';
+      +'- Nothing important near the far right edge (a sensor strip is cut there).\n'
+      +'- Background: ONE continuous pattern, texture, or scene across the whole canvas — no plain empty bands or split panels — that still looks good when circles are cut from its left side.\n';
   }else{
     p+='\nCOMPOSITION:\n'
       +'- Tall portrait design; put the HERO center or upper-center, large. Background fills everything edge-to-edge.\n'

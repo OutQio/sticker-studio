@@ -22,11 +22,17 @@ Rules for generated artwork:
   lens rings, circles, holes, cutouts, or a device outline into the image. The
   output is a plain flat rectangle of graphics; the physical phone provides the
   lenses. Any lens/hole/phone in the output = wrong, regenerate.
+- **Compose with spare room:** the sticker is cropped from the image in the
+  placement tool and staff move/resize it freely — keep all important content
+  in the central area and extend the background seamlessly to every edge with
+  ≥15–20% extra on all sides, so repositioning never reveals gaps.
 - **Hero placement (camera island):** holes are cut over the LEFT third and near
   the far-right edge after printing. Left third = background only; the HERO
   (logo/character/face) goes RIGHT OF CENTER (~two-thirds across), big,
   vertically centered; small clear margin at the far right. Background is one
   continuous pattern that survives circles being cut from its left.
+- **Current focus is the CAMERA sticker** — a dedicated back-panel prompt will
+  be added later.
 - **Quality:** highest resolution available — camera ≥1600×900 (16:9), back
   ≥1080×1920 (9:16). Small images print blurry; the tool shows a red ⚠ when
   the source is too small.
