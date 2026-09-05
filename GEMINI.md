@@ -21,10 +21,14 @@ Rules for generated artwork:
 - **Fill the whole canvas edge-to-edge.** No borders, frames, watermarks, or captions.
 - Corners are die-cut round (camera ≈9 mm radius, back ≈17 mm): keep critical
   elements ≥3 mm (≈35 px @300 DPI) from every edge.
-- **Camera island:** lens holes are cut AFTER printing — three Ø16.2 mm circles on
-  the left third (two stacked + one center-right of them) and a small flash/LiDAR
-  column near the right edge. Continuous patterns/gradients survive the cuts best;
-  put any focal element in the middle band.
+- **Camera island — THE MOST IMPORTANT RULE:** lens holes are cut AFTER printing —
+  three Ø16.2 mm circles on the left third and a flash/LiDAR column at the far
+  right. The only fully visible area is the MIDDLE BAND (~50–82% of the width,
+  full height). The HERO of the design (logo/character/face) must sit inside
+  that band, as large as it fits, vertically centered; the rest is continuous
+  background that survives having circles cut out of it.
+- **Reference images:** if the requester attaches one, its main subject IS the
+  hero — redraw/extract it and place it per the rule above, matching its style.
 - **Back panel:** plain tall rectangle (rounded corners); the camera bar is a
   separate sticker, not part of this artwork.
 - PNG or JPG. The tool die-cuts the outline itself at export; do NOT pre-cut

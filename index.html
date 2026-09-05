@@ -1592,16 +1592,21 @@ function buildAiPrompt(){
   const W=Math.round(d.w*pxPerMM), H=Math.round(d.h*pxPerMM);
   const r=(zoneKey==='camera'?state.geo.camR:state.geo.backR);
   const zoneName=zoneKey==='camera'?'camera island (top camera bar)':'back panel';
-  let p='Generate one artwork image for an iPhone 17 Pro Max '+zoneName+' sticker.\n'
-    +'- Exact output size: '+W+'×'+H+' px ('+d.w.toFixed(2)+'×'+d.h.toFixed(2)+' mm at '+state.dpi+' DPI). Same aspect ratio at higher resolution is fine.\n'
-    +'- Fill the ENTIRE canvas edge-to-edge. No borders, frames, watermarks, or text near the edges.\n'
-    +'- The sticker is die-cut with '+r.toFixed(0)+' mm rounded corners: keep important details at least 3 mm ('+Math.round(3*pxPerMM)+' px) from every edge.\n';
+  let p='Generate one artwork image for an iPhone 17 Pro Max '+zoneName+' sticker.\n';
   if(zoneKey==='camera'){
-    p+='- Lens holes are cut AFTER printing: three large circles on the left third, a small column near the right edge. Continuous patterns/gradients work best; keep any focal element in the middle band.\n';
-  }else{
-    p+='- This covers the tall lower back panel (the camera bar is a separate sticker).\n';
+    p+='\nTHE MOST IMPORTANT RULE — hero placement:\n'
+      +'After printing, a machine cuts three big lens holes over the LEFT third of the image and a small sensor column at the FAR RIGHT edge. The only fully visible open area is the MIDDLE BAND: roughly from 50% to 82% of the image width, full height. Place the HERO of the design (the logo, character, face, or main subject) inside that middle band, as LARGE as it can fit, vertically centered. Never put the hero on the left third or at the far right edge — it would be cut away.\n'
+      +'The rest of the canvas is background: a continuous pattern, texture, or gradient that fills everything edge-to-edge and still looks good with circles cut out of it.\n\n';
   }
-  p+='- Design brief: [describe the customer’s requested design here].';
+  p+='Technical requirements:\n'
+    +'- Exact output size: '+W+'×'+H+' px ('+d.w.toFixed(2)+'×'+d.h.toFixed(2)+' mm at '+state.dpi+' DPI). Same aspect ratio at higher resolution is fine.\n'
+    +'- Fill the ENTIRE canvas edge-to-edge. No borders, frames, watermarks, or captions.\n'
+    +'- Die-cut rounded corners ('+r.toFixed(0)+' mm): keep details at least 3 mm ('+Math.round(3*pxPerMM)+' px) from every edge.\n';
+  if(zoneKey==='back'){
+    p+='- This is the tall lower back panel (the camera bar is a separate sticker). Place the hero center or upper-center, large.\n';
+  }
+  p+='\nIf a reference image is attached: use it as the hero — extract or faithfully redraw its main subject and place it exactly as described above, then build a matching background around it. Match its colors and style.\n'
+    +'\nDesign brief: [describe the customer’s requested design here, or attach their reference image].';
   return p;
 }
 $('aiPromptBtn').addEventListener('click',async()=>{
