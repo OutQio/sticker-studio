@@ -146,6 +146,14 @@
   .drop b{display:block;font-size:13px;font-weight:600}
   .drop span{display:block;font-size:11.5px;color:var(--muted-2);margin-top:3px}
 
+  .paste-btn{
+    width:100%;margin-top:9px;border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+    border-radius:11px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;transition:.14s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .paste-btn svg{width:16px;height:16px;color:var(--accent)}
+  .paste-btn:hover{border-color:var(--accent);background:var(--accent-soft)}
+
   /* Design gallery */
   .gallery{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:13px}
   .thumb{
@@ -403,6 +411,10 @@
           <b data-i18n="uploadTitle">Upload a design</b>
           <span data-i18n="uploadSub">Drop image, click, or paste — PNG / JPG / SVG</span>
         </div>
+        <button class="paste-btn" id="pasteBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg>
+          <span data-i18n="pasteImg">Paste image</span>
+        </button>
         <div class="gallery" id="gallery"></div>
       </div>
       <div class="section">
@@ -629,6 +641,8 @@ const I18N={
     samples:"Quick samples", transform:"Placement", scale:"Size", rotate:"Rotation",
     fit:"Fit", fill:"Fill", center:"Center", reset:"Reset", removeImg:"Remove image",
     aiPrompt:"Copy AI image prompt", tCopied:"Prompt copied — paste it into Gemini or any AI",
+    pasteImg:"Paste image", tNoImgClip:"No image in the clipboard — copy an image first",
+    tClipDenied:"Clipboard blocked — allow paste access, or use Upload",
     stickerOpts:"Sticker options", bg:"Backing color",
     lensCut:"Show lenses", lensCutSub:"Cameras, flash & sensors — preview only",
     lensOpacity:"Lens opacity",
@@ -662,6 +676,8 @@ const I18N={
     samples:"عينات سريعة", transform:"الموضع", scale:"الحجم", rotate:"التدوير",
     fit:"احتواء", fill:"ملء", center:"توسيط", reset:"إعادة", removeImg:"إزالة الصورة",
     aiPrompt:"نسخ برومبت الذكاء الاصطناعي", tCopied:"تم النسخ — الصقه في Gemini أو أي ذكاء اصطناعي",
+    pasteImg:"لصق الصورة", tNoImgClip:"لا توجد صورة منسوخة — انسخ صورة أولًا",
+    tClipDenied:"تم منع الوصول للحافظة — اسمح باللصق أو استخدم الرفع",
     stickerOpts:"خيارات الاستكر", bg:"لون الخلفية",
     lensCut:"إظهار العدسات", lensCutSub:"الكاميرات والفلاش والحساسات — للمعاينة فقط",
     lensOpacity:"شفافية العدسات",
@@ -1472,10 +1488,28 @@ const drop=$('drop'), sw=document.querySelector('.stage-wrap');
   el.addEventListener('dragleave',()=>drop.classList.remove('hot'));
   el.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('hot');handleFiles(e.dataTransfer.files);});
 });
-// paste
+// paste (keyboard Ctrl/Cmd+V)
 window.addEventListener('paste',e=>{
   const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
   for(const it of items){ if(it.type.indexOf('image')===0){ const f=it.getAsFile(); if(f)handleFiles([f]); } }
+});
+// paste button (works on phones — reads the clipboard on tap)
+$('pasteBtn').addEventListener('click',async()=>{
+  try{
+    if(!(navigator.clipboard&&navigator.clipboard.read)){ toast(t('tClipDenied')); return; }
+    const items=await navigator.clipboard.read();
+    for(const it of items){
+      const type=(it.types||[]).find(x=>x.indexOf('image/')===0);
+      if(type){
+        const blob=await it.getType(type);
+        const rd=new FileReader();
+        rd.onload=async()=>{ const d=await addDesign(rd.result,'Pasted',false); if(d){ assignDesign(d.id); toast(t('tAdded')); } };
+        rd.readAsDataURL(blob);
+        return;
+      }
+    }
+    toast(t('tNoImgClip'));
+  }catch(e){ toast(t('tClipDenied')); }
 });
 
 /* ============================================================

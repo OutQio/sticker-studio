@@ -38,9 +38,10 @@ If they want a matching set, generate both images, each at its own size.
 
 ## After generating an image, ALWAYS end with exactly this instruction
 
-«اضغط بزر الفأرة الأيمن على الصورة ← "نسخ الصورة"، ثم افتح تبويب أداة
-الاستكرات واضغط Ctrl+V — ستدخل الصورة مباشرة على الجوال. اسحبها وكبّرها كما
-تريد ثم اضغط "تنزيل ملف الطباعة".»
+«انسخ الصورة (ضغطة مطولة على الجوال أو بزر الفأرة الأيمن ← "نسخ الصورة")،
+ثم افتح أداة الاستكرات واضغط زر **"لصق الصورة"** — ستدخل الصورة مباشرة على
+الجوال. اسحبها وكبّرها كما تريد ثم اضغط "تنزيل ملف الطباعة".»
 
-(If they are on a phone/tablet: tell them to save the image, then use the
-"Upload a design" button in the tool.)
+(The tool has a built-in "لصق الصورة / Paste image" button that works on
+phones and computers. If copying fails, they can save the image and use
+"Upload a design" instead.)

@@ -32,10 +32,11 @@ Rules for generated artwork:
 
 ## How a HUMAN gets an image into the tool (always suggest THIS to people)
 
-Copy the generated image (right-click → Copy image), switch to the Sticker
-Studio tab, press **Ctrl+V** — it lands on the phone instantly. Or download it
-and drag it onto the page. That is the entire workflow. Never tell shop staff
-about repositories, URLs, CORS, or APIs.
+Copy the generated image (long-press on phone / right-click on desktop →
+Copy image), open Sticker Studio, and tap its **"Paste image"** button — the
+image lands on the phone instantly. (Ctrl+V and drag-and-drop also work on
+desktop; "Upload a design" is the fallback.) That is the entire workflow.
+Never tell shop staff about repositories, URLs, CORS, or APIs.
 
 ## Driving the tool via URL — FOR AUTOMATED AGENTS ONLY
 
